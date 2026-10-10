@@ -24,6 +24,18 @@ the whole game is one file.
 - **Shine meter** fills as more jewellery goes on. Six out of six earns a
   sparkle shower.
 - **Surprise me!** rolls a random full outfit; **Take it all off** clears it.
+- **Music and sounds.** A slow underwater melody plus a chime for every piece
+  you put on. The speaker button on the stage mutes it, and the choice is
+  remembered. All of it is generated with the Web Audio API, so there are no
+  audio files to download.
+
+## On an iPad
+
+The whole game fits on one screen from 760px wide up, in either orientation --
+the mermaid scales to the height available and the jewellery tray scrolls on
+its own, so nothing important slides off the bottom. Browsers only allow sound
+after a tap, so the music starts on your first touch. If the iPad is on silent,
+Web Audio stays muted too.
 
 ## Adding to the game
 

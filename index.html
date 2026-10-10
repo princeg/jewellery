@@ -33,7 +33,11 @@
     padding-left:18px;
     padding-right:18px;
     overflow-x:hidden;
+    overscroll-behavior:none;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
   }
+  html{-webkit-text-size-adjust:100%}
   /* ambient light rays + bubbles */
   .rays,.bubbles{position:fixed;inset:0;pointer-events:none;z-index:0}
   .rays{
@@ -73,8 +77,8 @@
 
   /* ---------- main grid ---------- */
   .board{display:grid;gap:20px;grid-template-columns:1fr}
-  @media (min-width:920px){
-    .board{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}
+  @media (min-width:760px){
+    .board{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:start}
   }
 
   /* ---------- stage ---------- */
@@ -91,6 +95,24 @@
     box-shadow:inset 0 0 0 2px rgba(255,235,168,.35), inset 0 22px 50px rgba(0,0,0,.28);
   }
   .stage svg.doll{display:block;width:100%;height:auto;max-width:100%;position:relative;z-index:2}
+  .soundbtn{
+    position:absolute;top:10px;right:10px;z-index:4;width:46px;height:46px;border-radius:50%;
+    cursor:pointer;display:grid;place-items:center;border:2px solid rgba(255,248,226,.7);
+    background:radial-gradient(circle at 34% 28%,#FFF8E2,var(--gold) 50%,#C98A1E);
+    box-shadow:0 4px 0 var(--gold-dk),0 6px 14px rgba(0,0,0,.4);
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .soundbtn svg{width:24px;height:24px;display:block;fill:none;stroke:var(--ink);stroke-width:2.1;
+    stroke-linecap:round;stroke-linejoin:round}
+  .soundbtn[aria-pressed="false"]{
+    background:rgba(7,26,51,.62);border-color:rgba(255,247,238,.35);
+    box-shadow:0 4px 0 rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.35);
+  }
+  .soundbtn[aria-pressed="false"] svg{stroke:rgba(255,247,238,.7)}
+  .soundbtn[aria-pressed="true"] .slash{display:none}
+  .soundbtn[aria-pressed="true"] .waves{opacity:1}
+  .soundbtn[aria-pressed="false"] .waves{display:none}
+  .soundbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-dk)}
   #sparkles{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
   .glowpool{
     position:absolute;left:50%;bottom:7%;transform:translateX(-50%);
@@ -209,6 +231,36 @@
 
   footer{margin-top:22px;text-align:center;font-size:.82rem;color:rgba(255,247,238,.55);font-weight:500}
 
+  /* ---------- fit the whole game on one screen: iPad, laptops, desktops ---------- */
+  @media (min-width:760px) and (min-height:520px){
+    body{height:100vh;height:100dvh;overflow:hidden;padding-block:14px;display:flex;flex-direction:column}
+    .wrap{flex:1 1 auto;min-height:0;width:100%;display:flex;flex-direction:column}
+    header{margin-bottom:10px}
+    h1{font-size:clamp(1.7rem,4.6vh,3rem)}
+    .crest{font-size:.64rem;margin-bottom:3px}
+    .tagline{font-size:.86rem;margin-top:3px}
+    .board{flex:1 1 auto;min-height:0;gap:16px;grid-template-rows:minmax(0,1fr);align-items:stretch}
+    .stage-col{display:flex;flex-direction:column;min-height:0}
+    .stage-outer{flex:1 1 auto;min-height:0;display:flex;padding:10px}
+    .stage{flex:1 1 auto;min-height:0;display:block}
+    .stage svg.doll{width:100%;height:100%;max-height:100%}
+    .nav{margin-top:10px}
+    .arrow{width:52px;height:52px}
+    .meter{margin-top:9px;padding:9px 12px}
+    .controls{margin-top:9px}
+    .btn{padding:10px 14px}
+    .tray{height:100%;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--gold) transparent}
+    .tray::-webkit-scrollbar{width:9px}
+    .tray::-webkit-scrollbar-thumb{background:rgba(246,196,80,.5);border-radius:9px}
+    footer{display:none}
+  }
+  /* shorter screens (iPad landscape): trim the chrome so the stage keeps its height */
+  @media (min-width:760px) and (max-height:780px){
+    .tagline{display:none}
+    .meter h2{display:none}
+    .dots{margin-top:5px}
+  }
+
   @media (prefers-reduced-motion:reduce){
     .jewel::before,.bubble,.glowpool{animation:none}
     .jewel::before{display:none}
@@ -231,6 +283,13 @@
       <div class="stage-outer">
         <div class="stage" id="stage">
           <div class="glowpool" aria-hidden="true"></div>
+          <button class="soundbtn" id="sound" type="button" aria-pressed="true" aria-label="Turn the music off">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9h3.5L12 5v14l-4.5-4H4z"/>
+              <g class="waves"><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></g>
+              <path class="slash" d="M16 9.5l5 5M21 9.5l-5 5"/>
+            </svg>
+          </button>
           <svg class="doll" id="doll" viewBox="0 0 360 470" role="img" aria-label="Character wearing jewellery"></svg>
           <canvas id="sparkles" aria-hidden="true"></canvas>
         </div>
@@ -723,23 +782,26 @@ function toggle(item){
   else worn[item.slot] = item.id;
   closets[charIndex] = worn;
   render();
+  sfx(already ? "off" : "on");
   if(!already){
     const spec = CHARACTERS[charIndex].slots[item.slot];
     spec.pos.forEach(p => burst(p[0], p[1], 14));
   }
-  if(SLOT_ORDER.filter(s => worn[s]).length === 6 && !already) shower();
+  if(SLOT_ORDER.filter(s => worn[s]).length === 6 && !already){ shower(); sfx("fanfare"); }
 }
 function switchChar(dir){
   charIndex = (charIndex + dir + CHARACTERS.length) % CHARACTERS.length;
   worn = closets[charIndex];
   render();
   burst(180, 200, 26);
+  sfx("swap");
 }
 document.getElementById("prev").addEventListener("click", () => switchChar(-1));
 document.getElementById("next").addEventListener("click", () => switchChar(1));
 document.getElementById("clear").addEventListener("click", () => {
   worn = closets[charIndex] = {};
   render();
+  sfx("off");
 });
 document.getElementById("surprise").addEventListener("click", () => {
   worn = {};
@@ -750,6 +812,7 @@ document.getElementById("surprise").addEventListener("click", () => {
   closets[charIndex] = worn;
   render();
   shower();
+  sfx("fanfare");
 });
 document.addEventListener("keydown", e => {
   if(e.key === "ArrowLeft") switchChar(-1);
@@ -763,20 +826,30 @@ const stage = document.getElementById("stage");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let parts = [], raf = null, W = 1, H = 1, dpr = 1;
 
+/* stage coords are the 360x470 viewBox; map them onto wherever the SVG actually sits */
+let R = {x:0, y:0, w:1, h:1};
+function measure(){
+  const s = stage.getBoundingClientRect(), d = doll.getBoundingClientRect();
+  /* preserveAspectRatio centres the 360x470 drawing inside the element */
+  const k = Math.min((d.width || 1) / 360, (d.height || 1) / 470);
+  const w = 360 * k, h = 470 * k;
+  R = {x:(d.left - s.left) + ((d.width - w) / 2), y:(d.top - s.top) + ((d.height - h) / 2), w:w || 1, h:h || 1};
+}
+const sx = x => R.x + x / 360 * R.w, sy = y => R.y + y / 470 * R.h;
+
 function sizeCanvas(){
   dpr = Math.min(devicePixelRatio || 1, 2);
   W = stage.clientWidth; H = stage.clientHeight;
   cv.width = W * dpr; cv.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  measure();
 }
 new ResizeObserver(sizeCanvas).observe(stage);
 sizeCanvas();
 
-/* stage coords are the 360x470 viewBox; map them to canvas pixels */
-const sx = x => x / 360 * W, sy = y => y / 470 * H;
-
 function burst(vx, vy, count){
   if(reduce) return;
+  measure();
   const x = sx(vx), y = sy(vy);
   for(let i = 0; i < count; i++){
     const a = Math.random() * Math.PI * 2, sp = 0.6 + Math.random() * 2.4;
@@ -814,6 +887,114 @@ function tick(){
   if(parts.length) raf = requestAnimationFrame(tick);
   else { raf = null; ctx.clearRect(0, 0, W, H); }
 }
+
+/* ============================ music & sound ============================ */
+/* Everything is generated with the Web Audio API - no audio files to load.
+   A slow pentatonic drift over shifting roots, so it never lands on a sour
+   note and never quite repeats. Browsers only allow sound after a tap, so
+   the first touch anywhere starts it. */
+let actx = null, master = null, echo = null, loopTimer = null, nextBeat = 0, beat = 0;
+let soundOn = true;
+try { soundOn = localStorage.getItem("jewelbox-sound") !== "off"; } catch(e){}
+
+const soundBtn = document.getElementById("sound");
+const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+const PENT = [0, 2, 4, 7, 9];          /* major pentatonic */
+const ROOTS = [0, 5, -3, 2];           /* one root per bar: C, F, A, D */
+
+function initAudio(){
+  if(actx){ if(actx.state === "suspended") actx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return;
+  actx = new AC();
+  master = actx.createGain();
+  master.gain.value = soundOn ? 0.9 : 0;
+  const comp = actx.createDynamicsCompressor();
+  master.connect(comp); comp.connect(actx.destination);
+  /* a long soft echo does most of the underwater work */
+  echo = actx.createDelay(1);  echo.delayTime.value = 0.3;
+  const fb = actx.createGain(); fb.gain.value = 0.26;
+  const wet = actx.createGain(); wet.gain.value = 0.3;
+  echo.connect(fb); fb.connect(echo); echo.connect(wet); wet.connect(master);
+}
+
+function voice(freq, t, dur, {type = "triangle", gain = 0.1, wet = true} = {}){
+  if(!actx) return;
+  const o = actx.createOscillator(), g = actx.createGain(), f = actx.createBiquadFilter();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  f.type = "lowpass"; f.frequency.setValueAtTime(2800, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.025);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(master);
+  if(wet && echo) g.connect(echo);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+function playBeat(b, t){
+  const root = ROOTS[Math.floor(b / 8) % ROOTS.length], inBar = b % 8;
+  if(inBar === 0){                                  /* bass + a soft chord pad */
+    voice(midi(48 + root), t, 2.8, {type:"sine", gain:0.1, wet:false});
+    voice(midi(60 + root), t, 3.0, {type:"sine", gain:0.045});
+    voice(midi(67 + root), t, 3.0, {type:"sine", gain:0.032});
+  }
+  if(inBar === 4) voice(midi(55 + root), t, 1.6, {type:"sine", gain:0.055, wet:false});
+  if(Math.random() < (inBar % 2 ? 0.42 : 0.82)){    /* melody: drift, with rests */
+    const deg = PENT[Math.floor(Math.random() * PENT.length)];
+    const oct = Math.random() < 0.28 ? 12 : 0;
+    voice(midi(72 + root + deg + oct), t, 1.2, {type:"triangle", gain:0.07});
+  }
+}
+
+function loop(){
+  if(!actx || !soundOn) return;
+  while(nextBeat < actx.currentTime + 0.25){
+    playBeat(beat++, Math.max(nextBeat, actx.currentTime + 0.02));
+    nextBeat += 0.42;
+  }
+  loopTimer = setTimeout(loop, 60);
+}
+
+/* little chimes for the things you do */
+function sfx(kind){
+  if(!soundOn) return;
+  initAudio();
+  if(!actx) return;
+  const t = actx.currentTime + 0.02;
+  const runs = {
+    on:      {steps:[0, 4, 7, 12],          base:76, step:0.055, dur:0.55, type:"sine",     gain:0.12},
+    off:     {steps:[7, 2],                 base:72, step:0.07,  dur:0.35, type:"sine",     gain:0.09},
+    swap:    {steps:[0, 2, 4, 7, 9, 12, 16],base:64, step:0.045, dur:0.5,  type:"triangle", gain:0.08},
+    fanfare: {steps:[0, 4, 7, 12, 16, 19],  base:72, step:0.09,  dur:0.9,  type:"triangle", gain:0.11},
+  }[kind];
+  if(!runs) return;
+  runs.steps.forEach((semi, i) =>
+    voice(midi(runs.base + semi), t + i * runs.step, runs.dur, {type:runs.type, gain:runs.gain}));
+}
+
+function setSound(on){
+  soundOn = on;
+  soundBtn.setAttribute("aria-pressed", String(on));
+  soundBtn.setAttribute("aria-label", on ? "Turn the music off" : "Turn the music on");
+  try { localStorage.setItem("jewelbox-sound", on ? "on" : "off"); } catch(e){}
+  if(on){
+    initAudio();
+    if(!actx) return;
+    master.gain.setTargetAtTime(0.9, actx.currentTime, 0.05);
+    nextBeat = Math.max(nextBeat, actx.currentTime + 0.1);
+    if(!loopTimer) loop();
+  } else if(actx){
+    master.gain.setTargetAtTime(0, actx.currentTime, 0.04);
+    clearTimeout(loopTimer); loopTimer = null;
+  }
+}
+soundBtn.setAttribute("aria-pressed", String(soundOn));
+soundBtn.addEventListener("click", () => setSound(!soundOn));
+
+/* browsers need a gesture before any sound: the first tap anywhere does it */
+function wake(){ if(soundOn) setSound(true); }
+document.addEventListener("pointerdown", wake, {once:true});
+document.addEventListener("keydown", wake, {once:true});
 
 /* ============================ bubbles ============================ */
 if(!reduce){
