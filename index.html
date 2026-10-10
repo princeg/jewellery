@@ -426,6 +426,12 @@ function flower(x, y, r, c, mid){
 const chain = (d) => `<path d="${d}" fill="none" stroke="url(#gold)" stroke-width="3.4" stroke-linecap="round"/>
   <path d="${d}" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".5"/>`;
 
+function shoe(main, trim, extra){
+  return `<path d="M-21 7 Q-23 -9 -6 -11 Q7 -13 15 -5 Q22 -1 21 8 Q0 16 -21 7Z" fill="${main}"/>
+    <path d="M-21 7 Q0 16 21 8 L21 13 Q0 21 -21 12Z" fill="${trim}"/>
+    ${extra || ""}`;
+}
+
 function gown(bodice, skirt, trim, extra){
   return `<path d="M-46 -30 Q0 -14 46 -30 L86 92 Q0 116 -86 92Z" fill="${skirt}"/>
     <path d="M-38 -56 Q0 -42 38 -56 L46 -30 Q0 -14 -46 -30Z" fill="${bodice}"/>
@@ -440,6 +446,33 @@ function gown(bodice, skirt, trim, extra){
 /* Each piece is drawn around (0,0) at its anchor point:
    crown sits above, earrings & necklaces hang below, the rest are centred. */
 const ITEMS = [
+  /* ---- shoes: anchor = the foot, mirrored onto the other one ---- */
+  {id:"glass", name:"Glass Slippers", slot:"shoes", svg:
+    shoe("#DCF0FF", "url(#silver)", `${star(-6,-6,6,"#FFFFFF")}${gem(10,0,4,"#9FD8F5")}`)},
+  {id:"ruby", name:"Ruby Slippers", slot:"shoes", svg:
+    shoe("#D93F4A", "url(#gold)", `<path d="M-8 -6 L-18 -13 L-16 -2Z" fill="#FF6B6B"/><path d="M-4 -6 L6 -13 L4 -2Z" fill="#FF6B6B"/>${gem(-6,-6,4,"#FFEBA8")}`)},
+  {id:"sandals", name:"Golden Sandals", slot:"shoes", svg:
+    `<path d="M-21 8 Q0 16 21 9 L21 14 Q0 22 -21 13Z" fill="url(#gold)"/>
+     <path d="M-14 8 Q-4 -8 8 -6 M-2 10 Q8 -4 18 0" stroke="url(#gold)" stroke-width="4" fill="none" stroke-linecap="round"/>
+     ${gem(2,-2,5,"#7FEFE2")}`},
+  {id:"ballet", name:"Ballet Flats", slot:"shoes", svg:
+    shoe("#FF9FC0", "#FFF1F6", `<path d="M-10 -8 Q0 -20 10 -8" stroke="#FFF1F6" stroke-width="3.4" fill="none"/>${gem(0,-9,4,"#FFF1F6")}`)},
+  {id:"trainers", name:"Rainbow Trainers", slot:"shoes", svg:
+    shoe("#FFFDF7", "#7FEFE2", `<path d="M-16 -4 L-4 -9" stroke="#FF7FA8" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-10 1 L4 -6" stroke="#FFC84A" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-4 5 L12 -3" stroke="#A678F0" stroke-width="4" stroke-linecap="round"/>`)},
+  {id:"finslippers", name:"Fin Slippers", slot:"shoes", svg:
+    shoe("#4FE0C8", "#1E9FB4", `<path d="M-16 -7 q6 -8 11 0 q6 -8 11 0 q6 -8 11 0" fill="none" stroke="#DCFFF8" stroke-width="3"/>`)},
+  {id:"starboots", name:"Starry Boots", slot:"shoes", svg:
+    `<path d="M-15 -30 Q0 -34 15 -30 L17 -4 Q0 2 -17 -4Z" fill="#4A48A8"/>
+     ${shoe("#2E2A6B", "#FFEBA8", star(0,-4,7,"#FFEBA8"))}
+     ${star(-6,-22,6,"#FFEBA8")}${star(8,-14,5,"#FFF8DE")}`},
+  {id:"fluffy", name:"Fluffy Slippers", slot:"shoes", svg:
+    shoe("#FFC2D6", "#FF9FC0", `<circle cx="-4" cy="-10" r="9" fill="#FFF1F6"/><circle cx="4" cy="-13" r="7" fill="#FFF1F6"/>
+      <circle cx="-10" cy="-13" r="6" fill="#FFF1F6"/>`)},
+  {id:"heels", name:"Jewelled Heels", slot:"shoes", svg:
+    `<path d="M14 8 L20 8 L21 20 L15 20Z" fill="url(#gold)"/>
+     ${shoe("#A678F0", "url(#gold)", gem(-2,-5,5,"#FFEBA8") + gem(10,-2,3.4,"#FFF8DE"))}`},
   /* ---- dresses: anchor = the middle of the body ---- */
   {id:"party", name:"Party Frock", slot:"dress", svg:
     gown("#E8577F", "#FF9FC0", "#FFF1F6",
@@ -596,6 +629,7 @@ const SHELVES = [
   {slot:"wrist",  label:"Bracelets"},
   {slot:"brooch", label:"Brooches"},
   {slot:"low",    label:"Anklets & Tail Bands"},
+  {slot:"shoes",  label:"Shoes & Slippers"},
 ];
 const SLOT_ORDER = SHELVES.map(s => s.slot);
 
@@ -799,6 +833,13 @@ function person(o){
 }
 
 /* ---------- where the jewellery sits on each body ---------- */
+const SHOE_POS = {
+  stand:     [[161,420],[199,420]],
+  fins:      [[154,408],[206,408]],
+  stump:     [[158,402],[202,402]],
+  tentacles: [[140,418],[220,418]],
+  none:      [[161,420],[199,420]],
+};
 const SLOTS_CRITTER = {
   dress:  {pos:[[180,286]], s:1},
   crown:  {pos:[[180,74]],  s:1},
@@ -806,7 +847,8 @@ const SLOTS_CRITTER = {
   neck:   {pos:[[180,232]], s:1},
   brooch: {pos:[[180,296]], s:1},
   wrist:  {pos:[[109,344],[251,344]], s:1},
-  low:    {pos:[[161,412],[199,412]], s:.78},
+  low:    {pos:[[161,400],[199,400]], s:.78},
+  shoes:  {pos:[[161,420],[199,420]], s:1},
 };
 const SLOTS_MERMAID = {
   dress:  {pos:[[180,222]], s:.7},
@@ -815,7 +857,8 @@ const SLOTS_MERMAID = {
   neck:   {pos:[[180,188]], s:.95},
   brooch: {pos:[[180,228]], s:.95},
   wrist:  {pos:[[122,286],[238,286]], s:1},
-  low:    {pos:[[180,348]], s:1.25},
+  low:    {pos:[[180,340]], s:1.25},
+  shoes:  {pos:[[120,420],[240,420]], s:.9},
 };
 const SLOTS_PERSON = {
   dress:  {pos:[[180,268]], s:1.02},
@@ -824,7 +867,8 @@ const SLOTS_PERSON = {
   neck:   {pos:[[180,186]], s:.95},
   brooch: {pos:[[180,232]], s:.95},
   wrist:  {pos:[[120,292],[240,292]], s:1},
-  low:    {pos:[[156,398],[204,398]], s:.78},
+  low:    {pos:[[156,386],[204,386]], s:.78},
+  shoes:  {pos:[[156,402],[204,402]], s:1},
 };
 
 /* ---------- the roster ---------- */
@@ -930,7 +974,8 @@ const ROSTER = [
 const CHARACTERS = ROSTER.map(r => ({
   name: r.n,
   title: r.t,
-  slots: r.k === "m" ? SLOTS_MERMAID : r.k === "p" ? SLOTS_PERSON : SLOTS_CRITTER,
+  slots: r.k === "m" ? SLOTS_MERMAID : r.k === "p" ? SLOTS_PERSON
+    : Object.assign({}, SLOTS_CRITTER, {shoes:{pos:SHOE_POS[r.legs] || SHOE_POS.stand, s:1}}),
   draw: () => r.k === "m" ? mermaid(r) : r.k === "p" ? person(r) : critter(r),
 }));
 
@@ -964,7 +1009,8 @@ SHELVES.forEach(sh => {
     b.id = "jewel-" + item.id;
     b.dataset.item = item.id;
     b.setAttribute("aria-pressed", "false");
-    const box = sh.slot === "dress" ? "-100 -70 200 206"
+    const box = sh.slot === "shoes" ? "-30 -38 60 64"
+      : sh.slot === "dress" ? "-100 -70 200 206"
       : sh.slot === "crown" ? "-56 -52 112 60"
       : sh.slot === "ears" ? "-26 -8 52 46"
       : sh.slot === "neck" ? "-52 -6 104 72"
@@ -989,6 +1035,7 @@ function render(){
     if(!id) return;
     const item = byId[id];
     const spec = ch.slots[slot];
+    if(!spec) return;
     spec.pos.forEach((p, idx) => {
       const flip = idx === 1 ? " scale(-1,1)" : "";
       jewels += `<g class="worn" transform="translate(${p[0]},${p[1]}) scale(${spec.s})${flip}">${item.svg}</g>`;
@@ -1005,7 +1052,7 @@ function render(){
   const n = SLOT_ORDER.filter(s => worn[s]).length;
   [...pipsEl.children].forEach((p, i) => p.classList.toggle("lit", i < n));
   const words = ["Bare as a pebble","A little glimmer","Getting pretty","Properly shiny",
-                 "Dazzling!","Ocean royalty","Almost perfect","DAZZLING QUEEN!"];
+                 "Dazzling!","Ocean royalty","Nearly there","Almost perfect","DAZZLING QUEEN!"];
   verdictEl.textContent = n === total ? words[total] : `${n} of ${total} · ${words[n]}`;
   verdictEl.classList.toggle("max", n === total);
   [...pickerGrid.children].forEach((b, i) => b.setAttribute("aria-current", String(i === charIndex)));
@@ -1277,7 +1324,8 @@ function start(state){
     worn = closets[charIndex];
   } else {
     /* open in a pretty resting state, not an empty one */
-    worn = closets[0] = {dress:"seasilk", crown:"tiara", ears:"peardrop", neck:"pearlstrand", low:"goldbands"};
+    worn = closets[0] = {dress:"seasilk", crown:"tiara", ears:"peardrop", neck:"pearlstrand",
+      low:"goldbands", shoes:"finslippers"};
   }
   render();
 }
