@@ -1,0 +1,846 @@
+<title>Mermaid's Jewel Box</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&display=swap">
+<style>
+  :root{
+    --abyss:#071A33;
+    --deep:#0C2A4D;
+    --lagoon:#12506B;
+    --teal:#1E7F86;
+    --gold:#F6C450;
+    --gold-lt:#FFEBA8;
+    --gold-dk:#A96D12;
+    --pearl:#FFF7EE;
+    --rose:#FF7FA8;
+    --aqua:#7FEFE2;
+    --amethyst:#A678F0;
+    --ink:#061325;
+    --shelf:rgba(255,247,238,.07);
+    --shelf-edge:rgba(246,196,80,.28);
+    --display:"Fraunces","Iowan Old Style",Georgia,serif;
+    --ui:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:var(--ui);
+    color:var(--pearl);
+    background:
+      radial-gradient(1100px 700px at 50% -10%, #1C6B86 0%, #0E3A5C 42%, var(--abyss) 78%),
+      var(--abyss);
+    min-height:100vh;
+    padding-block:22px 40px;
+    padding-left:18px;
+    padding-right:18px;
+    overflow-x:hidden;
+  }
+  /* ambient light rays + bubbles */
+  .rays,.bubbles{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .rays{
+    background:
+      linear-gradient(104deg, transparent 38%, rgba(190,255,250,.09) 42%, transparent 46%),
+      linear-gradient(86deg, transparent 56%, rgba(255,235,168,.07) 60%, transparent 64%);
+    mix-blend-mode:screen;
+  }
+  .bubble{
+    position:absolute;bottom:-40px;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.85), rgba(190,240,255,.18) 48%, rgba(190,240,255,.04) 70%);
+    box-shadow:inset 0 0 6px rgba(255,255,255,.4);
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    from{transform:translateY(0) translateX(0);opacity:0}
+    12%{opacity:.75}
+    to{transform:translateY(-112vh) translateX(26px);opacity:0}
+  }
+
+  .wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto}
+
+  /* ---------- header ---------- */
+  header{text-align:center;margin-bottom:22px}
+  .crest{
+    font-family:var(--ui);font-weight:700;font-size:.72rem;letter-spacing:.3em;
+    text-transform:uppercase;color:var(--gold);opacity:.85;margin:0 0 6px;
+  }
+  h1{
+    font-family:var(--display);font-weight:900;font-style:italic;
+    font-size:clamp(2.1rem,7vw,3.6rem);line-height:.95;margin:0;text-wrap:balance;
+    background:linear-gradient(176deg,#FFFDF4 6%,var(--gold-lt) 34%,var(--gold) 58%,#E9A52C 76%,#FFF6DC 96%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 0 rgba(169,109,18,.55)) drop-shadow(0 0 22px rgba(246,196,80,.35));
+  }
+  .tagline{margin:8px 0 0;font-size:1rem;color:rgba(255,247,238,.78);font-weight:500}
+
+  /* ---------- main grid ---------- */
+  .board{display:grid;gap:20px;grid-template-columns:1fr}
+  @media (min-width:920px){
+    .board{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}
+  }
+
+  /* ---------- stage ---------- */
+  .stage-outer{
+    position:relative;border-radius:30px;padding:12px;
+    background:linear-gradient(160deg,var(--gold-lt),var(--gold) 28%,var(--gold-dk) 54%,var(--gold) 78%,#FFF8E2);
+    box-shadow:0 18px 44px rgba(3,12,26,.55), inset 0 0 0 1px rgba(255,255,255,.4);
+  }
+  .stage{
+    position:relative;border-radius:22px;overflow:hidden;
+    background:
+      radial-gradient(70% 58% at 50% 34%, rgba(127,239,226,.34), transparent 70%),
+      linear-gradient(185deg,#1B6E8C 0%,#124C70 46%,#0A2B4B 100%);
+    box-shadow:inset 0 0 0 2px rgba(255,235,168,.35), inset 0 22px 50px rgba(0,0,0,.28);
+  }
+  .stage svg.doll{display:block;width:100%;height:auto;max-width:100%;position:relative;z-index:2}
+  #sparkles{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+  .glowpool{
+    position:absolute;left:50%;bottom:7%;transform:translateX(-50%);
+    width:68%;height:16%;border-radius:50%;z-index:1;
+    background:radial-gradient(ellipse at center, rgba(255,235,168,.45), rgba(255,235,168,0) 70%);
+    filter:blur(6px);animation:pulse 4.5s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}50%{opacity:.95;transform:translateX(-50%) scale(1.08)}}
+
+  /* character nav */
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+  .arrow{
+    flex:0 0 auto;width:58px;height:58px;border-radius:50%;cursor:pointer;
+    border:2px solid rgba(255,248,226,.75);
+    background:radial-gradient(circle at 34% 28%,#FFF8E2,var(--gold) 46%,#C98A1E);
+    color:var(--ink);font-size:1.6rem;line-height:1;font-weight:800;
+    box-shadow:0 7px 0 var(--gold-dk),0 10px 22px rgba(0,0,0,.4);
+    transition:transform .12s ease, box-shadow .12s ease;
+    display:grid;place-items:center;
+  }
+  .arrow:hover{transform:translateY(-2px)}
+  .arrow:active{transform:translateY(5px);box-shadow:0 2px 0 var(--gold-dk),0 4px 10px rgba(0,0,0,.4)}
+  .nameplate{flex:1 1 auto;text-align:center;min-width:0}
+  .nameplate .who{
+    font-family:var(--display);font-weight:900;font-size:clamp(1.3rem,4.4vw,1.9rem);
+    line-height:1.05;margin:0;color:var(--pearl);text-wrap:balance;
+  }
+  .nameplate .what{margin:2px 0 0;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--aqua);font-weight:700}
+  .dots{display:flex;gap:7px;justify-content:center;margin-top:8px}
+  .dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,247,238,.3)}
+  .dots i.on{background:var(--gold);box-shadow:0 0 9px var(--gold)}
+
+  /* shine meter */
+  .meter{
+    margin-top:14px;padding:12px 14px;border-radius:18px;
+    background:var(--shelf);border:1px solid var(--shelf-edge);
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .meter h2{
+    margin:0;font-family:var(--ui);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;
+  }
+  .pips{display:flex;gap:6px;flex:1 1 150px}
+  .pips span{
+    flex:1 1 0;height:11px;border-radius:7px;background:rgba(255,247,238,.14);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);transition:background .25s ease, box-shadow .25s ease;
+  }
+  .pips span.lit{
+    background:linear-gradient(90deg,var(--gold-lt),var(--gold));
+    box-shadow:0 0 10px rgba(246,196,80,.8);
+  }
+  .verdict{font-weight:800;font-size:.95rem;color:var(--pearl);white-space:nowrap}
+  .verdict.max{color:var(--gold-lt);text-shadow:0 0 14px rgba(246,196,80,.9)}
+
+  .controls{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .btn{
+    flex:1 1 140px;padding:12px 16px;border-radius:16px;cursor:pointer;font-family:var(--ui);
+    font-weight:800;font-size:1rem;color:var(--ink);border:2px solid rgba(255,255,255,.5);
+    background:linear-gradient(170deg,#FFF9E6,var(--gold) 55%,#D9981F);
+    box-shadow:0 6px 0 var(--gold-dk),0 8px 18px rgba(0,0,0,.35);
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .btn.ghost{
+    color:var(--pearl);background:rgba(255,247,238,.08);
+    border-color:rgba(255,247,238,.35);box-shadow:0 5px 0 rgba(0,0,0,.35);
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--gold-dk)}
+  .btn.ghost:active{box-shadow:0 1px 0 rgba(0,0,0,.35)}
+
+  /* ---------- tray ---------- */
+  .tray{
+    border-radius:26px;padding:16px 16px 20px;
+    background:linear-gradient(185deg,rgba(255,247,238,.1),rgba(7,26,51,.42));
+    border:1px solid var(--shelf-edge);
+    box-shadow:0 16px 36px rgba(3,12,26,.45), inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .tray > p.hint{margin:0 0 12px;font-size:.92rem;color:rgba(255,247,238,.75);font-weight:500}
+  .shelf + .shelf{margin-top:16px}
+  .shelf h3{
+    margin:0 0 9px;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+    color:var(--gold);display:flex;align-items:center;gap:10px;
+  }
+  .shelf h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--shelf-edge),transparent)}
+  .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:9px}
+  .jewel{
+    position:relative;overflow:hidden;cursor:pointer;padding:7px 5px 8px;border-radius:16px;
+    background:radial-gradient(circle at 50% 22%, rgba(255,255,255,.16), rgba(10,35,60,.5));
+    border:1.5px solid rgba(255,247,238,.2);
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:transform .12s ease, border-color .15s ease, box-shadow .15s ease;
+    font-family:var(--ui);
+  }
+  .jewel svg{width:46px;height:46px;display:block;overflow:visible}
+  .jewel b{font-size:.63rem;font-weight:700;line-height:1.15;text-align:center;color:rgba(255,247,238,.9)}
+  .jewel:hover{transform:translateY(-3px) scale(1.03);border-color:var(--gold)}
+  .jewel[aria-pressed="true"]{
+    border-color:var(--gold);
+    background:radial-gradient(circle at 50% 22%, rgba(255,235,168,.4), rgba(169,109,18,.35));
+    box-shadow:0 0 0 2px rgba(246,196,80,.35),0 0 18px rgba(246,196,80,.45);
+  }
+  .jewel[aria-pressed="true"] b{color:#FFFBEF}
+  .jewel[aria-pressed="true"]::after{
+    content:"✓";position:absolute;top:3px;right:5px;font-size:.7rem;font-weight:800;color:var(--ink);
+    background:var(--gold);border-radius:50%;width:15px;height:15px;display:grid;place-items:center;
+  }
+  /* shimmer sweep across every jewel */
+  .jewel::before{
+    content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-18deg);animation:sweep 4.2s ease-in-out infinite;
+  }
+  @keyframes sweep{0%{left:-60%}38%,100%{left:130%}}
+
+  button:focus-visible,.jewel:focus-visible{outline:3px solid var(--aqua);outline-offset:3px}
+
+  footer{margin-top:22px;text-align:center;font-size:.82rem;color:rgba(255,247,238,.55);font-weight:500}
+
+  @media (prefers-reduced-motion:reduce){
+    .jewel::before,.bubble,.glowpool{animation:none}
+    .jewel::before{display:none}
+    *{transition-duration:.01ms !important}
+  }
+</style>
+
+<div class="rays" aria-hidden="true"></div>
+<div class="bubbles" id="bubbles" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header>
+    <p class="crest">Treasure from the deep</p>
+    <h1>Mermaid's Jewel Box</h1>
+    <p class="tagline">Tap a jewel to put it on — tap it again to take it off.</p>
+  </header>
+
+  <div class="board">
+    <section class="stage-col" aria-label="Dressing stage">
+      <div class="stage-outer">
+        <div class="stage" id="stage">
+          <div class="glowpool" aria-hidden="true"></div>
+          <svg class="doll" id="doll" viewBox="0 0 360 470" role="img" aria-label="Character wearing jewellery"></svg>
+          <canvas id="sparkles" aria-hidden="true"></canvas>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="arrow" id="prev" aria-label="Previous character">‹</button>
+        <div class="nameplate">
+          <p class="who" id="who">Marina the Mermaid</p>
+          <p class="what" id="what">Coral Reef Princess</p>
+          <div class="dots" id="dots" aria-hidden="true"></div>
+        </div>
+        <button class="arrow" id="next" aria-label="Next character">›</button>
+      </div>
+
+      <div class="meter">
+        <h2>Shine meter</h2>
+        <div class="pips" id="pips" role="img" aria-label="Shine meter"></div>
+        <span class="verdict" id="verdict">0 of 6 sparkling</span>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="surprise">Surprise me!</button>
+        <button class="btn ghost" id="clear">Take it all off</button>
+      </div>
+    </section>
+
+    <section class="tray" id="tray" aria-label="Jewellery tray">
+      <p class="hint">Every piece knows where it goes — crowns land on heads, anklets on tails and toes.</p>
+    </section>
+  </div>
+
+  <footer>Six friends, twenty-eight treasures, endless outfits.</footer>
+</div>
+
+<script>
+/* ============================ shared SVG defs ============================ */
+const DEFS = `
+<defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFF8DE"/><stop offset=".35" stop-color="#F6C450"/>
+    <stop offset=".7" stop-color="#D4941F"/><stop offset="1" stop-color="#FFEBA8"/>
+  </linearGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#CFE3EE"/><stop offset="1" stop-color="#8FA9B8"/>
+  </linearGradient>
+  <radialGradient id="pearl" cx=".34" cy=".3" r=".8">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#FDEFE6"/><stop offset="1" stop-color="#E2C4C9"/>
+  </radialGradient>
+  <radialGradient id="water" cx=".5" cy=".3" r=".8">
+    <stop offset="0" stop-color="#7FEFE2" stop-opacity=".5"/><stop offset="1" stop-color="#0A2B4B" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="tail" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4FE0C8"/><stop offset=".5" stop-color="#1E9FB4"/><stop offset="1" stop-color="#1A5F97"/>
+  </linearGradient>
+  <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#FF9FC0"/><stop offset=".6" stop-color="#E8577F"/><stop offset="1" stop-color="#A83A72"/>
+  </linearGradient>
+  <linearGradient id="mane" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#CFA8FF"/><stop offset=".55" stop-color="#8E6BE0"/><stop offset="1" stop-color="#F58FC2"/>
+  </linearGradient>
+</defs>`;
+
+/* a round gem with a specular highlight */
+function gem(x, y, r, c, dark){
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="${dark||'rgba(0,0,0,.25)'}" stroke-width="${r*0.14}"/>
+    <ellipse cx="${x-r*0.3}" cy="${y-r*0.34}" rx="${r*0.4}" ry="${r*0.28}" fill="#fff" opacity=".7"/>
+    <circle cx="${x+r*0.34}" cy="${y+r*0.32}" r="${r*0.16}" fill="#fff" opacity=".35"/>`;
+}
+/* a faceted marquise / teardrop gem pointing down */
+function drop(x, y, w, h, c){
+  return `<path d="M${x} ${y-h/2} C${x+w/2} ${y-h/6} ${x+w/2} ${y+h/2.6} ${x} ${y+h/2}
+    C${x-w/2} ${y+h/2.6} ${x-w/2} ${y-h/6} ${x} ${y-h/2}Z" fill="${c}" stroke="rgba(255,255,255,.55)" stroke-width="1"/>
+    <path d="M${x} ${y-h/2.3} C${x+w/4} ${y-h/8} ${x+w/5} ${y+h/8} ${x} ${y+h/4}Z" fill="#fff" opacity=".45"/>`;
+}
+function star(x, y, r, c){
+  let p = "";
+  for(let i=0;i<10;i++){
+    const rad = i%2 ? r*0.44 : r;
+    const a = -Math.PI/2 + i*Math.PI/5;
+    p += (i?"L":"M") + (x+Math.cos(a)*rad).toFixed(1) + " " + (y+Math.sin(a)*rad).toFixed(1) + " ";
+  }
+  return `<path d="${p}Z" fill="${c}" stroke="rgba(169,109,18,.5)" stroke-width="1"/>
+    <circle cx="${x-r*0.18}" cy="${y-r*0.2}" r="${r*0.16}" fill="#fff" opacity=".65"/>`;
+}
+function heart(x, y, s, c){
+  return `<path d="M${x} ${y+s*0.62} C${x-s*1.1} ${y-s*0.1} ${x-s*0.5} ${y-s*0.95} ${x} ${y-s*0.3}
+    C${x+s*0.5} ${y-s*0.95} ${x+s*1.1} ${y-s*0.1} ${x} ${y+s*0.62}Z" fill="${c}" stroke="rgba(255,255,255,.5)" stroke-width="1"/>
+    <ellipse cx="${x-s*0.32}" cy="${y-s*0.26}" rx="${s*0.2}" ry="${s*0.13}" fill="#fff" opacity=".6"/>`;
+}
+function shell(x, y, r, c){
+  let ribs = "";
+  for(let i=-2;i<=2;i++) ribs += `<path d="M${x} ${y+r*0.55} L${x+i*r*0.42} ${y-r*0.72}" stroke="rgba(255,255,255,.55)" stroke-width="1.4" fill="none"/>`;
+  return `<path d="M${x-r} ${y+r*0.5} Q${x-r*0.9} ${y-r} ${x} ${y-r} Q${x+r*0.9} ${y-r} ${x+r} ${y+r*0.5}
+    Q${x} ${y+r*0.95} ${x-r} ${y+r*0.5}Z" fill="${c}"/>${ribs}`;
+}
+function flower(x, y, r, c, mid){
+  let p = "";
+  for(let i=0;i<5;i++){
+    const a = -Math.PI/2 + i*2*Math.PI/5;
+    p += `<ellipse cx="${(x+Math.cos(a)*r*0.62).toFixed(1)}" cy="${(y+Math.sin(a)*r*0.62).toFixed(1)}" rx="${r*0.52}" ry="${r*0.38}"
+      transform="rotate(${(a*180/Math.PI).toFixed(1)} ${(x+Math.cos(a)*r*0.62).toFixed(1)} ${(y+Math.sin(a)*r*0.62).toFixed(1)})" fill="${c}"/>`;
+  }
+  return p + `<circle cx="${x}" cy="${y}" r="${r*0.34}" fill="${mid||'#FFE37A'}"/>`;
+}
+const chain = (d) => `<path d="${d}" fill="none" stroke="url(#gold)" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="${d}" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".5"/>`;
+
+/* ============================ the jewellery ============================ */
+/* Each piece is drawn around (0,0) at its anchor point:
+   crown sits above, earrings & necklaces hang below, the rest are centred. */
+const ITEMS = [
+  /* ---- crowns: anchor = bottom centre, art goes up ---- */
+  {id:"tiara", name:"Pearl Tiara", slot:"crown", svg:
+    `<path d="M-46 0 Q0 -12 46 0 Q0 7 -46 0Z" fill="url(#gold)"/>
+     ${chain("M-40 -4 Q-20 -32 0 -8 Q20 -32 40 -4")}
+     <circle cx="-40" cy="-6" r="5" fill="url(#pearl)"/><circle cx="-20" cy="-30" r="5.5" fill="url(#pearl)"/>
+     <circle cx="0" cy="-12" r="5" fill="url(#pearl)"/><circle cx="20" cy="-30" r="5.5" fill="url(#pearl)"/>
+     <circle cx="40" cy="-6" r="5" fill="url(#pearl)"/>${drop(0,-26,13,20,"#FF9FC0")}`},
+  {id:"starcrown", name:"Star Crown", slot:"crown", svg:
+    `<path d="M-48 2 L-48 -10 L-26 -32 L-8 -12 L8 -12 L26 -32 L48 -10 L48 2Z" fill="url(#gold)" stroke="#A96D12" stroke-width="1.5"/>
+     ${star(-26,-38,10,"#FFEBA8")}${star(26,-38,10,"#FFEBA8")}${star(0,-26,12,"#7FEFE2")}
+     ${gem(-40,-3,4.5,"#A678F0")}${gem(40,-3,4.5,"#A678F0")}`},
+  {id:"shellcrown", name:"Shell Crown", slot:"crown", svg:
+    `<path d="M-50 0 Q0 -14 50 0 Q0 8 -50 0Z" fill="url(#gold)"/>
+     ${shell(0,-20,20,"#FFC2D6")}${shell(-32,-10,12,"#FFE0B5")}${shell(32,-10,12,"#FFE0B5")}
+     ${gem(0,-14,5,"#7FEFE2")}`},
+  {id:"flowercrown", name:"Flower Crown", slot:"crown", svg:
+    `<path d="M-50 0 Q0 -16 50 0" fill="none" stroke="#4FBF8B" stroke-width="7" stroke-linecap="round"/>
+     ${flower(0,-18,15,"#FFF1F6","#FFC84A")}${flower(-28,-11,12,"#FFB3D1")}${flower(28,-11,12,"#FFB3D1")}
+     ${flower(-46,-1,9,"#CFA8FF")}${flower(46,-1,9,"#CFA8FF")}`},
+  {id:"diamondcrown", name:"Diamond Crown", slot:"crown", svg:
+    `<path d="M-44 2 L-44 -12 L-22 -40 L0 -16 L22 -40 L44 -12 L44 2Z" fill="url(#gold)" stroke="#A96D12" stroke-width="1.5"/>
+     <path d="M-44 -2 L44 -2" stroke="#FFF8DE" stroke-width="3"/>
+     ${drop(-22,-44,12,18,"#CFE3EE")}${drop(22,-44,12,18,"#CFE3EE")}${drop(0,-24,14,20,"#7FEFE2")}
+     ${gem(-33,-6,4,"#FF7FA8")}${gem(33,-6,4,"#FF7FA8")}`},
+
+  /* ---- earrings: anchor = earlobe, art hangs down (mirrored on the other ear) ---- */
+  {id:"peardrop", name:"Pearl Drops", slot:"ears", svg:
+    `${gem(0,0,4,"url(#gold)")}${chain("M0 3 L0 12")}<circle cx="0" cy="19" r="8" fill="url(#pearl)"/>
+     <ellipse cx="-2.4" cy="16" rx="2.6" ry="1.8" fill="#fff" opacity=".8"/>`},
+  {id:"hoops", name:"Gold Hoops", slot:"ears", svg:
+    `<circle cx="0" cy="14" r="12" fill="none" stroke="url(#gold)" stroke-width="4.5"/>
+     <circle cx="0" cy="14" r="12" fill="none" stroke="#fff" stroke-width="1.2" opacity=".55"/>${gem(0,1,3.4,"#FFEBA8")}`},
+  {id:"starstuds", name:"Star Studs", slot:"ears", svg: `${star(0,7,11,"#FFEBA8")}${gem(0,7,3.2,"#FF7FA8")}`},
+  {id:"chandelier", name:"Chandeliers", slot:"ears", svg:
+    `${gem(0,0,3.6,"url(#gold)")}${chain("M0 3 L0 9")}${gem(0,13,5.5,"#A678F0")}
+     ${chain("M-8 15 Q0 22 8 15")}${drop(-8,24,8,13,"#7FEFE2")}${drop(0,28,9,15,"#FF9FC0")}${drop(8,24,8,13,"#7FEFE2")}`},
+  {id:"teardrops", name:"Aqua Teardrops", slot:"ears", svg:
+    `${gem(0,0,4,"url(#gold)")}${chain("M0 3 L0 10")}${drop(0,22,15,26,"#7FEFE2")}`},
+
+  /* ---- necklaces: anchor = base of neck, art hangs down ---- */
+  {id:"pearlstrand", name:"Pearl Strand", slot:"neck", svg:
+    (()=>{let s="";for(let i=-5;i<=5;i++){const x=i*9.2,y=Math.pow(Math.abs(i)/5,2)*-0+ (25-Math.cos(i/5*1.2)*25);
+      s+=`<circle cx="${x.toFixed(1)}" cy="${(y+2).toFixed(1)}" r="${i===0?7:5.6}" fill="url(#pearl)"/>`;}return s;})()},
+  {id:"heartpendant", name:"Heart Pendant", slot:"neck", svg:
+    `${chain("M-44 2 Q0 36 44 2")}${gem(0,34,5,"url(#gold)")}${heart(0,48,15,"#FF5F8F")}`},
+  {id:"choker", name:"Emerald Choker", slot:"neck", svg:
+    `<path d="M-46 4 Q0 26 46 4" fill="none" stroke="url(#gold)" stroke-width="9" stroke-linecap="round"/>
+     <rect x="-9" y="14" width="18" height="18" rx="4" fill="#2FD39B" stroke="url(#gold)" stroke-width="2.5"/>
+     <rect x="-6" y="17" width="7" height="6" rx="2" fill="#fff" opacity=".5"/>
+     ${gem(-24,14,5,"#2FD39B")}${gem(24,14,5,"#2FD39B")}`},
+  {id:"rainbowbeads", name:"Rainbow Beads", slot:"neck", svg:
+    (()=>{const cols=["#FF7FA8","#FFC84A","#FFEBA8","#7FEFE2","#6FD3F5","#A678F0","#FF9FC0"];let s="";
+      for(let i=-6;i<=6;i++){const x=i*7.6,y=28-Math.cos(i/6*1.25)*28;
+        s+=gem(x,y+4,i===0?7.5:6,cols[(i+6)%7]);}return s;})()},
+  {id:"shellcollar", name:"Shell Collar", slot:"neck", svg:
+    `${chain("M-44 2 Q0 30 44 2")}${shell(0,32,16,"#FFC2D6")}${shell(-22,24,10,"#FFE0B5")}${shell(22,24,10,"#FFE0B5")}`},
+
+  /* ---- bracelets: anchor = wrist centre (mirrored on the other wrist) ---- */
+  {id:"bangle", name:"Gold Bangle", slot:"wrist", svg:
+    `<ellipse cx="0" cy="0" rx="17" ry="9" fill="none" stroke="url(#gold)" stroke-width="7"/>
+     <ellipse cx="0" cy="0" rx="17" ry="9" fill="none" stroke="#fff" stroke-width="1.6" opacity=".5"/>`},
+  {id:"charms", name:"Charm Bracelet", slot:"wrist", svg:
+    `<ellipse cx="0" cy="0" rx="17" ry="9" fill="none" stroke="url(#gold)" stroke-width="4.5"/>
+     ${star(-10,12,6,"#FFEBA8")}${heart(2,13,7,"#FF7FA8")}${gem(13,10,4.5,"#7FEFE2")}`},
+  {id:"candybeads", name:"Candy Beads", slot:"wrist", svg:
+    (()=>{let s="";const cols=["#FF7FA8","#FFC84A","#7FEFE2","#A678F0","#FFF1F6","#6FD3F5"];
+      for(let i=0;i<6;i++){const a=i/6*Math.PI*2;s+=gem(Math.cos(a)*17,Math.sin(a)*9,5.4,cols[i]);}return s;})()},
+  {id:"pearlcuff", name:"Pearl Cuff", slot:"wrist", svg:
+    `<ellipse cx="0" cy="0" rx="18" ry="10" fill="none" stroke="url(#silver)" stroke-width="8"/>
+     <circle cx="-9" cy="-7" r="4.4" fill="url(#pearl)"/><circle cx="2" cy="-9" r="4.8" fill="url(#pearl)"/>
+     <circle cx="12" cy="-5" r="4.2" fill="url(#pearl)"/>`},
+
+  /* ---- brooches: anchor = centre of chest ---- */
+  {id:"butterfly", name:"Butterfly Pin", slot:"brooch", svg:
+    `<path d="M0 0 C-6 -16 -26 -20 -24 -6 C-32 -2 -24 10 -12 8 C-6 7 -2 4 0 0Z" fill="#A678F0" stroke="url(#gold)" stroke-width="1.6"/>
+     <path d="M0 0 C6 -16 26 -20 24 -6 C32 -2 24 10 12 8 C6 7 2 4 0 0Z" fill="#A678F0" stroke="url(#gold)" stroke-width="1.6"/>
+     <ellipse cx="-16" cy="-8" rx="4" ry="3" fill="#FFEBA8"/><ellipse cx="16" cy="-8" rx="4" ry="3" fill="#FFEBA8"/>
+     <rect x="-2" y="-8" width="4" height="18" rx="2" fill="url(#gold)"/>${gem(0,-9,3.6,"#7FEFE2")}`},
+  {id:"starfish", name:"Starfish Pin", slot:"brooch", svg:
+    `${star(0,0,20,"#FFA24A")}${gem(0,0,5,"#FFEBA8")}
+     ${gem(-7,-6,2.4,"#fff")}${gem(7,-6,2.4,"#fff")}${gem(0,8,2.4,"#fff")}`},
+  {id:"moonclasp", name:"Moon Clasp", slot:"brooch", svg:
+    `<path d="M6 -16 A17 17 0 1 0 6 16 A13 13 0 1 1 6 -16Z" fill="url(#gold)" stroke="#A96D12" stroke-width="1.4"/>
+     ${star(12,-10,7,"#FFF8DE")}${gem(10,8,4,"#7FEFE2")}`},
+  {id:"rosepin", name:"Rose Pin", slot:"brooch", svg:
+    `${flower(0,0,18,"#FF5F8F","#FFC84A")}${flower(0,0,9,"#FF9FC0","#FFEBA8")}
+     <path d="M-16 10 Q-24 16 -14 20" fill="none" stroke="#4FBF8B" stroke-width="4" stroke-linecap="round"/>`},
+  {id:"gembow", name:"Jewelled Bow", slot:"brooch", svg:
+    `<path d="M-2 0 L-24 -11 L-24 11Z" fill="#FF7FA8" stroke="url(#gold)" stroke-width="1.6"/>
+     <path d="M2 0 L24 -11 L24 11Z" fill="#FF7FA8" stroke="url(#gold)" stroke-width="1.6"/>
+     ${gem(0,0,7,"#FFEBA8")}${gem(-15,0,3.2,"#fff")}${gem(15,0,3.2,"#fff")}`},
+
+  /* ---- anklets & tail bands: anchor = centre of the band ---- */
+  {id:"goldbands", name:"Golden Bands", slot:"low", svg:
+    `<ellipse cx="0" cy="-9" rx="20" ry="7" fill="none" stroke="url(#gold)" stroke-width="5"/>
+     <ellipse cx="0" cy="1" rx="22" ry="7.5" fill="none" stroke="url(#gold)" stroke-width="5"/>
+     <ellipse cx="0" cy="11" rx="20" ry="7" fill="none" stroke="url(#gold)" stroke-width="5"/>
+     ${gem(0,1,5,"#7FEFE2")}`},
+  {id:"beadanklet", name:"Beaded Anklet", slot:"low", svg:
+    (()=>{let s=`<ellipse cx="0" cy="0" rx="19" ry="7" fill="none" stroke="url(#gold)" stroke-width="2.5"/>`;
+      const cols=["#FF7FA8","#FFC84A","#7FEFE2","#A678F0","#6FD3F5"];
+      for(let i=0;i<5;i++){const a=i/5*Math.PI*2;s+=gem(Math.cos(a)*19,Math.sin(a)*7,4.8,cols[i]);}return s;})()},
+  {id:"ribbonbow", name:"Ribbon Bow", slot:"low", svg:
+    `<ellipse cx="0" cy="0" rx="19" ry="7" fill="none" stroke="#FF9FC0" stroke-width="5"/>
+     <path d="M-1 -2 L-18 -14 L-13 2Z" fill="#FF5F8F"/><path d="M1 -2 L18 -14 L13 2Z" fill="#FF5F8F"/>
+     ${gem(0,-3,5,"#FFEBA8")}`},
+  {id:"charmchain", name:"Charm Chain", slot:"low", svg:
+    `<ellipse cx="0" cy="-4" rx="20" ry="7" fill="none" stroke="url(#silver)" stroke-width="4"/>
+     ${star(-11,8,6,"#FFEBA8")}${shell(1,9,8,"#FFC2D6")}${gem(13,7,4.4,"#A678F0")}`},
+];
+
+const SHELVES = [
+  {slot:"crown",  label:"Crowns & Tiaras"},
+  {slot:"ears",   label:"Earrings"},
+  {slot:"neck",   label:"Necklaces"},
+  {slot:"wrist",  label:"Bracelets"},
+  {slot:"brooch", label:"Brooches"},
+  {slot:"low",    label:"Anklets & Tail Bands"},
+];
+const SLOT_ORDER = SHELVES.map(s => s.slot);
+
+/* ============================ the characters ============================ */
+/* A shared cartoon body keeps all six friends consistent, so a necklace
+   that fits one fits them all. The mermaid gets her own tail. */
+function face(cx, cy, r, o){
+  const eyeY = cy + r*0.02, eyeX = r*0.36;
+  return `
+    <ellipse cx="${cx}" cy="${cy+r*0.36}" rx="${r*0.52}" ry="${r*0.38}" fill="${o.muzzle||'rgba(255,255,255,.55)'}"/>
+    <ellipse cx="${cx-eyeX}" cy="${eyeY}" rx="${r*0.15}" ry="${r*0.175}" fill="#13263B"/>
+    <ellipse cx="${cx+eyeX}" cy="${eyeY}" rx="${r*0.15}" ry="${r*0.175}" fill="#13263B"/>
+    <circle cx="${cx-eyeX-r*0.05}" cy="${eyeY-r*0.07}" r="${r*0.055}" fill="#fff"/>
+    <circle cx="${cx+eyeX-r*0.05}" cy="${eyeY-r*0.07}" r="${r*0.055}" fill="#fff"/>
+    <path d="M${cx-eyeX-r*0.14} ${eyeY-r*0.26} q${r*0.14} ${-r*0.1} ${r*0.28} 0" stroke="#13263B" stroke-width="${r*0.045}" fill="none" stroke-linecap="round"/>
+    <path d="M${cx+eyeX-r*0.14} ${eyeY-r*0.26} q${r*0.14} ${-r*0.1} ${r*0.28} 0" stroke="#13263B" stroke-width="${r*0.045}" fill="none" stroke-linecap="round"/>
+    <ellipse cx="${cx}" cy="${cy+r*0.26}" rx="${r*0.11}" ry="${r*0.085}" fill="${o.nose||'#13263B'}"/>
+    <path d="M${cx-r*0.17} ${cy+r*0.42} q${r*0.17} ${r*0.16} ${r*0.34} 0" stroke="#13263B" stroke-width="${r*0.05}" fill="none" stroke-linecap="round"/>
+    <ellipse cx="${cx-r*0.66}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.1}" fill="#FF8FB4" opacity=".6"/>
+    <ellipse cx="${cx+r*0.66}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.1}" fill="#FF8FB4" opacity=".6"/>`;
+}
+
+/* standing critter: head r=78 at (180,150); body 180,300; wrists 108/252,338 */
+function critter(o){
+  return `
+    ${o.behind||""}
+    <!-- legs -->
+    <rect x="146" y="344" width="30" height="76" rx="15" fill="${o.fur}" stroke="${o.furDark}" stroke-width="2.5"/>
+    <rect x="184" y="344" width="30" height="76" rx="15" fill="${o.fur}" stroke="${o.furDark}" stroke-width="2.5"/>
+    <ellipse cx="161" cy="424" rx="21" ry="13" fill="${o.paw||o.furDark}"/>
+    <ellipse cx="199" cy="424" rx="21" ry="13" fill="${o.paw||o.furDark}"/>
+    <!-- body -->
+    <ellipse cx="180" cy="300" rx="64" ry="74" fill="${o.fur}"/>
+    <ellipse cx="180" cy="312" rx="41" ry="52" fill="${o.belly}"/>
+    <!-- arms -->
+    <path d="M130 266 Q100 300 110 338" stroke="${o.furDark}" stroke-width="31" fill="none" stroke-linecap="round"/>
+    <path d="M230 266 Q260 300 250 338" stroke="${o.furDark}" stroke-width="31" fill="none" stroke-linecap="round"/>
+    <path d="M130 266 Q100 300 110 338" stroke="${o.fur}" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <path d="M230 266 Q260 300 250 338" stroke="${o.fur}" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <circle cx="109" cy="344" r="15" fill="${o.paw||o.furDark}"/>
+    <circle cx="251" cy="344" r="15" fill="${o.paw||o.furDark}"/>
+    ${o.ears||""}
+    <!-- head -->
+    <circle cx="180" cy="150" r="78" fill="${o.fur}"/>
+    ${o.headExtra||""}
+    ${face(180,150,78,o)}
+    ${o.front||""}`;
+}
+
+const SLOTS_CRITTER = {
+  crown:{pos:[[180,74]],s:1},
+  ears:{pos:[[110,166],[250,166]],s:1},
+  neck:{pos:[[180,232]],s:1},
+  brooch:{pos:[[180,296]],s:1},
+  wrist:{pos:[[109,344],[251,344]],s:1},
+  low:{pos:[[161,412],[199,412]],s:.78},
+};
+
+const CHARACTERS = [
+  {
+    name:"Marina the Mermaid", title:"Coral Reef Princess",
+    slots:{
+      crown:{pos:[[180,60]],s:.92},
+      ears:{pos:[[128,128],[232,128]],s:1},
+      neck:{pos:[[180,188]],s:.95},
+      brooch:{pos:[[180,228]],s:.95},
+      wrist:{pos:[[122,286],[238,286]],s:1},
+      low:{pos:[[180,348]],s:1.25},
+    },
+    draw:()=>`
+      <!-- hair behind -->
+      <path d="M180 32 C104 32 78 92 86 146 C80 212 94 268 106 326 C128 272 110 240 118 206
+        C112 150 128 104 180 100 C232 104 248 150 242 206 C250 240 232 272 254 326
+        C266 268 280 212 274 146 C282 92 256 32 180 32Z" fill="url(#hair)"/>
+      <!-- tail -->
+      <path d="M180 240 C212 248 222 290 214 332 C208 366 196 382 192 398
+        C214 384 258 392 276 426 C250 444 206 442 180 428 C154 442 110 444 84 426
+        C102 392 146 384 168 398 C164 382 152 366 146 332 C138 290 148 248 180 240Z" fill="url(#tail)"/>
+      <g opacity=".45">
+        <path d="M160 280 q20 12 40 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
+        <path d="M156 306 q24 13 48 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
+        <path d="M158 332 q22 12 44 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
+        <path d="M164 356 q16 10 32 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
+      </g>
+      <!-- torso -->
+      <ellipse cx="180" cy="214" rx="40" ry="48" fill="#FFD9BE"/>
+      <path d="M140 206 q40 -26 80 0 q-6 26 -40 30 q-34 -4 -40 -30Z" fill="#2FD39B"/>
+      ${shell(160,204,17,"#FFC2D6")}${shell(200,204,17,"#FFC2D6")}
+      <!-- arms -->
+      <path d="M146 196 Q118 236 124 282" stroke="#FFD9BE" stroke-width="20" fill="none" stroke-linecap="round"/>
+      <path d="M214 196 Q242 236 236 282" stroke="#FFD9BE" stroke-width="20" fill="none" stroke-linecap="round"/>
+      <!-- neck + head -->
+      <rect x="166" y="150" width="28" height="30" rx="12" fill="#F7C9A8"/>
+      <circle cx="180" cy="112" r="58" fill="#FFD9BE"/>
+      <path d="M122 110 C122 56 148 36 180 36 C212 36 238 56 238 110 C222 86 206 76 180 76 C154 76 138 86 122 110Z" fill="url(#hair)"/>
+      ${face(180,112,58,{muzzle:"rgba(255,255,255,0)",nose:"#D98A6E"})}`
+  },
+  {
+    name:"Bluey the Pup", title:"Backyard Adventurer",
+    slots:SLOTS_CRITTER,
+    draw:()=>critter({
+      fur:"#5FA9DF", furDark:"#3D7FB4", belly:"#C9E6FA", paw:"#D7EDFB", nose:"#1B3A55",
+      muzzle:"#E8F5FE",
+      behind:`<path d="M240 330 Q296 324 300 272" stroke="#5FA9DF" stroke-width="22" fill="none" stroke-linecap="round"/>
+              <circle cx="302" cy="264" r="14" fill="#C9E6FA"/>`,
+      ears:`<path d="M112 92 Q92 42 128 48 Q142 70 140 100Z" fill="#3D7FB4"/>
+            <path d="M248 92 Q268 42 232 48 Q218 70 220 100Z" fill="#3D7FB4"/>`,
+      headExtra:`<path d="M180 72 Q146 76 134 110 Q160 100 180 100 Q200 100 226 110 Q214 76 180 72Z" fill="#3D7FB4"/>
+                 <ellipse cx="132" cy="150" rx="16" ry="22" fill="#C9E6FA"/>
+                 <ellipse cx="228" cy="150" rx="16" ry="22" fill="#C9E6FA"/>`,
+    })
+  },
+  {
+    name:"Luna the Unicorn", title:"Moonlight Dreamer",
+    slots:{...SLOTS_CRITTER, crown:{pos:[[180,86]],s:.9}},
+    draw:()=>critter({
+      fur:"#FFF4F8", furDark:"#F0D7E4", belly:"#FFE6F1", paw:"#E7C9F0", nose:"#C98AA8",
+      muzzle:"#FFEAF3",
+      behind:`<path d="M236 338 Q300 340 306 276" stroke="url(#mane)" stroke-width="24" fill="none" stroke-linecap="round"/>`,
+      ears:`<path d="M118 90 Q106 50 136 62 Q146 80 146 102Z" fill="#FFF4F8"/>
+            <path d="M242 90 Q254 50 224 62 Q214 80 214 102Z" fill="#FFF4F8"/>`,
+      headExtra:`<path d="M180 72 L166 24 Q180 10 194 24Z" fill="url(#gold)" stroke="#A96D12" stroke-width="1.6"/>
+                 <path d="M172 50 l16 -6 M174 36 l12 -5" stroke="#A96D12" stroke-width="2.4" stroke-linecap="round"/>
+                 <path d="M126 112 Q104 70 142 58 Q132 96 154 84 Q148 116 180 96 Q212 116 206 84
+                   Q228 96 218 58 Q256 70 234 112 Q208 84 180 84 Q152 84 126 112Z" fill="url(#mane)"/>`,
+    })
+  },
+  {
+    name:"Mochi the Kitty", title:"Velvet Paw Diva",
+    slots:SLOTS_CRITTER,
+    draw:()=>critter({
+      fur:"#F7B45F", furDark:"#D9913C", belly:"#FFF0D6", paw:"#FFE7C2", nose:"#C96A5C",
+      muzzle:"#FFF4E2",
+      behind:`<path d="M242 326 Q306 318 288 254" stroke="#F7B45F" stroke-width="20" fill="none" stroke-linecap="round"/>`,
+      ears:`<path d="M116 94 L122 38 L166 74Z" fill="#F7B45F"/><path d="M126 86 L130 54 L154 76Z" fill="#FFC2D6"/>
+            <path d="M244 94 L238 38 L194 74Z" fill="#F7B45F"/><path d="M234 86 L230 54 L206 76Z" fill="#FFC2D6"/>`,
+      headExtra:`<path d="M138 102 q22 -10 42 -4 M222 102 q-22 -10 -42 -4" stroke="#D9913C" stroke-width="4" fill="none" stroke-linecap="round"/>`,
+      front:`<g stroke="#FFF4E2" stroke-width="2.6" stroke-linecap="round" opacity=".9">
+               <path d="M122 182 L82 174"/><path d="M122 192 L84 196"/>
+               <path d="M238 182 L278 174"/><path d="M238 192 L276 196"/></g>`,
+    })
+  },
+  {
+    name:"Ember the Dragon", title:"Keeper of the Hoard",
+    slots:SLOTS_CRITTER,
+    draw:()=>critter({
+      fur:"#5FD3A4", furDark:"#2FA67C", belly:"#FFE9A8", paw:"#FFD36B", nose:"#1F6B55",
+      muzzle:"#C9F5E2",
+      behind:`<path d="M240 332 Q314 334 318 262" stroke="#5FD3A4" stroke-width="20" fill="none" stroke-linecap="round"/>
+              <path d="M318 262 l16 -18 l4 24 l18 6 l-26 12Z" fill="#FFD36B"/>
+              <path d="M110 268 Q52 214 48 272 Q74 300 118 300Z" fill="#8FEFC6"/>
+              <path d="M250 268 Q308 214 312 272 Q286 300 242 300Z" fill="#8FEFC6"/>`,
+      ears:`<path d="M126 86 L112 40 L158 72Z" fill="#FFD36B"/><path d="M234 86 L248 40 L202 72Z" fill="#FFD36B"/>`,
+      headExtra:`<path d="M180 74 l-12 -26 l24 0Z" fill="#FFD36B"/>
+                 <path d="M156 236 q24 -14 48 0" stroke="#2FA67C" stroke-width="0" fill="none"/>`,
+      front:`<g fill="#FFD36B" opacity=".9">
+               <path d="M176 374 l4 -14 l4 14Z"/><path d="M176 356 l4 -14 l4 14Z"/></g>`,
+    })
+  },
+  {
+    name:"Pip the Bunny", title:"Garden Party Sweetheart",
+    slots:{...SLOTS_CRITTER, crown:{pos:[[180,76]],s:1}},
+    draw:()=>critter({
+      fur:"#E6DAF7", furDark:"#C7B4E8", belly:"#FBF4FF", paw:"#FFD9EC", nose:"#C96A8E",
+      muzzle:"#FBF4FF",
+      behind:`<circle cx="268" cy="330" r="22" fill="#FBF4FF"/>`,
+      ears:`<path d="M146 84 Q122 6 152 4 Q174 30 168 90Z" fill="#E6DAF7"/>
+            <path d="M149 76 Q136 20 152 20 Q162 42 160 82Z" fill="#FFD9EC"/>
+            <path d="M214 84 Q238 6 208 4 Q186 30 192 90Z" fill="#E6DAF7"/>
+            <path d="M211 76 Q224 20 208 20 Q198 42 200 82Z" fill="#FFD9EC"/>`,
+      front:`<g stroke="#C7B4E8" stroke-width="2.4" stroke-linecap="round" opacity=".85">
+               <path d="M124 180 L88 172"/><path d="M236 180 L272 172"/></g>
+             <path d="M172 196 q8 10 16 0" fill="#fff" opacity=".9"/>`,
+    })
+  },
+];
+
+/* ============================ game state ============================ */
+const byId = {};
+ITEMS.forEach(i => byId[i.id] = i);
+
+let charIndex = 0;
+let worn = {};                       /* slot -> item id, per character */
+const closets = CHARACTERS.map(() => ({}));
+
+const doll = document.getElementById("doll");
+const tray = document.getElementById("tray");
+const pipsEl = document.getElementById("pips");
+const verdictEl = document.getElementById("verdict");
+const dotsEl = document.getElementById("dots");
+
+/* ---- build the tray once ---- */
+SHELVES.forEach(sh => {
+  const shelf = document.createElement("div");
+  shelf.className = "shelf";
+  const h3 = document.createElement("h3");
+  h3.textContent = sh.label;
+  shelf.appendChild(h3);
+  const grid = document.createElement("div");
+  grid.className = "items";
+  ITEMS.filter(i => i.slot === sh.slot).forEach(item => {
+    const b = document.createElement("button");
+    b.className = "jewel";
+    b.type = "button";
+    b.id = "jewel-" + item.id;
+    b.dataset.item = item.id;
+    b.setAttribute("aria-pressed", "false");
+    const box = sh.slot === "crown" ? "-56 -52 112 60"
+      : sh.slot === "ears" ? "-26 -8 52 46"
+      : sh.slot === "neck" ? "-52 -6 104 72"
+      : "-30 -24 60 48";
+    b.innerHTML = `<svg viewBox="${box}" aria-hidden="true">${DEFS}${item.svg}</svg><b>${item.name}</b>`;
+    b.addEventListener("click", () => toggle(item));
+    grid.appendChild(b);
+  });
+  shelf.appendChild(grid);
+  tray.appendChild(shelf);
+});
+
+/* ---- shine meter pips ---- */
+SLOT_ORDER.forEach(() => pipsEl.appendChild(document.createElement("span")));
+CHARACTERS.forEach(() => dotsEl.appendChild(document.createElement("i")));
+
+/* ---- render ---- */
+function render(){
+  const ch = CHARACTERS[charIndex];
+  let jewels = "";
+  SLOT_ORDER.forEach(slot => {
+    const id = worn[slot];
+    if(!id) return;
+    const item = byId[id];
+    const spec = ch.slots[slot];
+    spec.pos.forEach((p, idx) => {
+      const flip = idx === 1 ? " scale(-1,1)" : "";
+      jewels += `<g class="worn" transform="translate(${p[0]},${p[1]}) scale(${spec.s})${flip}">${item.svg}</g>`;
+    });
+  });
+  doll.innerHTML = DEFS + `<ellipse cx="180" cy="250" rx="170" ry="210" fill="url(#water)"/>`
+    + ch.draw() + jewels;
+
+  document.getElementById("who").textContent = ch.name;
+  document.getElementById("what").textContent = ch.title;
+  [...dotsEl.children].forEach((d, i) => d.classList.toggle("on", i === charIndex));
+
+  const n = SLOT_ORDER.filter(s => worn[s]).length;
+  [...pipsEl.children].forEach((p, i) => p.classList.toggle("lit", i < n));
+  const words = ["Bare as a pebble","A little glimmer","Getting pretty","Properly shiny","Dazzling!","Ocean royalty","DAZZLING QUEEN!"];
+  verdictEl.textContent = n === 6 ? words[6] : `${n} of 6 · ${words[n]}`;
+  verdictEl.classList.toggle("max", n === 6);
+
+  document.querySelectorAll(".jewel").forEach(b => {
+    b.setAttribute("aria-pressed", String(worn[byId[b.dataset.item].slot] === b.dataset.item));
+  });
+}
+
+/* ---- interactions ---- */
+function toggle(item){
+  const already = worn[item.slot] === item.id;
+  if(already) delete worn[item.slot];
+  else worn[item.slot] = item.id;
+  closets[charIndex] = worn;
+  render();
+  if(!already){
+    const spec = CHARACTERS[charIndex].slots[item.slot];
+    spec.pos.forEach(p => burst(p[0], p[1], 14));
+  }
+  if(SLOT_ORDER.filter(s => worn[s]).length === 6 && !already) shower();
+}
+function switchChar(dir){
+  charIndex = (charIndex + dir + CHARACTERS.length) % CHARACTERS.length;
+  worn = closets[charIndex];
+  render();
+  burst(180, 200, 26);
+}
+document.getElementById("prev").addEventListener("click", () => switchChar(-1));
+document.getElementById("next").addEventListener("click", () => switchChar(1));
+document.getElementById("clear").addEventListener("click", () => {
+  worn = closets[charIndex] = {};
+  render();
+});
+document.getElementById("surprise").addEventListener("click", () => {
+  worn = {};
+  SLOT_ORDER.forEach(slot => {
+    const pool = ITEMS.filter(i => i.slot === slot);
+    worn[slot] = pool[Math.floor(Math.random() * pool.length)].id;
+  });
+  closets[charIndex] = worn;
+  render();
+  shower();
+});
+document.addEventListener("keydown", e => {
+  if(e.key === "ArrowLeft") switchChar(-1);
+  if(e.key === "ArrowRight") switchChar(1);
+});
+
+/* ============================ sparkles ============================ */
+const cv = document.getElementById("sparkles");
+const ctx = cv.getContext("2d");
+const stage = document.getElementById("stage");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let parts = [], raf = null, W = 1, H = 1, dpr = 1;
+
+function sizeCanvas(){
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = stage.clientWidth; H = stage.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+new ResizeObserver(sizeCanvas).observe(stage);
+sizeCanvas();
+
+/* stage coords are the 360x470 viewBox; map them to canvas pixels */
+const sx = x => x / 360 * W, sy = y => y / 470 * H;
+
+function burst(vx, vy, count){
+  if(reduce) return;
+  const x = sx(vx), y = sy(vy);
+  for(let i = 0; i < count; i++){
+    const a = Math.random() * Math.PI * 2, sp = 0.6 + Math.random() * 2.4;
+    parts.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 0.4,
+      life:1, r:1.6 + Math.random()*3.2,
+      c:["#FFEBA8","#FFFFFF","#7FEFE2","#FF9FC0","#F6C450"][Math.floor(Math.random()*5)]});
+  }
+  if(!raf) raf = requestAnimationFrame(tick);
+}
+function shower(){
+  if(reduce) return;
+  for(let i = 0; i < 70; i++){
+    parts.push({x:Math.random()*W, y:Math.random()*H*0.5, vx:(Math.random()-.5)*1.2, vy:0.5+Math.random()*1.6,
+      life:1, r:1.4 + Math.random()*3, c:["#FFEBA8","#FFFFFF","#F6C450","#FF9FC0"][Math.floor(Math.random()*4)]});
+  }
+  if(!raf) raf = requestAnimationFrame(tick);
+}
+function tick(){
+  ctx.clearRect(0, 0, W, H);
+  parts = parts.filter(p => p.life > 0);
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.028; p.life -= 0.016;
+    ctx.globalAlpha = Math.max(p.life, 0);
+    ctx.fillStyle = p.c;
+    /* four-point twinkle */
+    const r = p.r * (0.5 + p.life);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - r*2); ctx.lineTo(p.x + r*0.5, p.y - r*0.5);
+    ctx.lineTo(p.x + r*2, p.y); ctx.lineTo(p.x + r*0.5, p.y + r*0.5);
+    ctx.lineTo(p.x, p.y + r*2); ctx.lineTo(p.x - r*0.5, p.y + r*0.5);
+    ctx.lineTo(p.x - r*2, p.y); ctx.lineTo(p.x - r*0.5, p.y - r*0.5);
+    ctx.closePath(); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  if(parts.length) raf = requestAnimationFrame(tick);
+  else { raf = null; ctx.clearRect(0, 0, W, H); }
+}
+
+/* ============================ bubbles ============================ */
+if(!reduce){
+  const bub = document.getElementById("bubbles");
+  for(let i = 0; i < 16; i++){
+    const b = document.createElement("div");
+    const s = 6 + Math.random() * 20;
+    b.className = "bubble";
+    b.style.cssText = `left:${Math.random()*100}%;width:${s}px;height:${s}px;
+      animation-duration:${14 + Math.random()*16}s;animation-delay:${-Math.random()*26}s`;
+    bub.appendChild(b);
+  }
+}
+
+/* ============================ boot (state survives republish) ============================ */
+function start(state){
+  if(state && typeof state.charIndex === "number"){
+    charIndex = state.charIndex % CHARACTERS.length;
+    (state.closets || []).forEach((c, i) => { if(closets[i]) closets[i] = c || {}; });
+    worn = closets[charIndex];
+  } else {
+    /* open in a pretty resting state, not an empty one */
+    worn = closets[0] = {crown:"tiara", ears:"peardrop", neck:"pearlstrand", low:"goldbands"};
+  }
+  render();
+}
+window.claude?.hot?.snapshot?.(() => ({charIndex, closets}));
+if(window.claude?.hot?.ready) window.claude.hot.ready(start);
+else start(window.claude?.hot?.data ?? null);
+</script>
