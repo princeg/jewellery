@@ -1,7 +1,7 @@
 # Mermaid's Jewel Box
 
-A shiny underwater dress-up game. Pick jewellery from the treasure tray and
-put it on a mermaid — or on any of her five friends.
+A shiny underwater dress-up game. Pick dresses and jewellery from the treasure
+tray and put them on a mermaid — or on any of her forty-nine friends.
 
 ![single file](https://img.shields.io/badge/build-none%20required-F6C450) ![vanilla](https://img.shields.io/badge/stack-HTML%20%2B%20SVG%20%2B%20canvas-7FEFE2)
 
@@ -15,14 +15,17 @@ the whole game is one file.
 - **Tap a jewel to put it on, tap it again to take it off.** Every piece knows
   where it belongs, so earrings always land on ears and bands always land on
   the tail or ankles.
-- **28 pieces** across six shelves: crowns & tiaras, earrings, necklaces,
-  bracelets, brooches, and anklets & tail bands.
-- **Six characters**, each remembering their own outfit — switch with the gold
-  arrows or the left/right arrow keys:
-  Marina the Mermaid, Bluey the Pup, Luna the Unicorn, Mochi the Kitty,
-  Ember the Dragon, and Pip the Bunny.
-- **Shine meter** fills as more jewellery goes on. Six out of six earns a
-  sparkle shower.
+- **37 pieces** across seven shelves: dresses & gowns, crowns & tiaras,
+  earrings, necklaces, bracelets, brooches, and anklets & tail bands. Dresses
+  go on first, so the jewellery always sits on top of them.
+- **50 characters**, each remembering their own outfit — switch with the gold
+  arrows or the left/right arrow keys, or tap **All 50 friends** for the whole
+  list. Mermaids, princesses and a fairy; dogs, cats, bunnies and farm animals;
+  lions, tigers, elephants and giraffes; an alligator, three dinosaurs and a
+  dragon; owls, flamingos, bees and butterflies; an octopus, a robot, an alien
+  and a goggle-wearing yellow buddy.
+- **Shine meter** fills as more goes on. Seven out of seven earns a sparkle
+  shower.
 - **Surprise me!** rolls a random full outfit; **Take it all off** clears it.
 - **Music and sounds.** A slow underwater melody plus a chime for every piece
   you put on. The speaker button on the stage mutes it, and the choice is
@@ -41,13 +44,19 @@ Web Audio stays muted too.
 
 Everything lives in the `<script>` block at the bottom of `index.html`.
 
-- **A new jewel**: add an entry to `ITEMS` with a `slot`
-  (`crown`, `ears`, `neck`, `wrist`, `brooch`, `low`) and an SVG string drawn
+- **A new jewel or dress**: add an entry to `ITEMS` with a `slot`
+  (`dress`, `crown`, `ears`, `neck`, `wrist`, `brooch`, `low`) and an SVG string drawn
   around `(0,0)` — crowns sit above the anchor, earrings and necklaces hang
   below it, everything else is centred on it.
-- **A new character**: add an entry to `CHARACTERS`. Most friends reuse the
-  shared `critter()` body and `SLOTS_CRITTER` anchor points, so a new one is
-  usually just fur colours plus ears, a tail and any horns.
+- **A new character**: add an `R_(...)` entry to `ROSTER`. Nearly every friend
+  is the shared `critter()` body with different colours and a choice of ears
+  (`round`, `pointy`, `floppy`, `hang`, `long`, `tiny`, `big`, `tuft`, `tufts`,
+  `horns`), tail (`thin`, `bushy`, `puff`, `curl`, `long`, `tufted`, `fish`)
+  and legs (`stand`, `fins`, `tentacles`, `stump`, `none`), plus optional
+  markings from `MARK` — spots, stripes, wool, wings, a shell, a snout,
+  goggles. That shared body is what lets one necklace fit a bunny, a
+  triceratops and a robot. Mermaids (`m`) and princesses (`p`) have their own
+  shapes.
 
 ## Accessibility
 
