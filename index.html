@@ -426,6 +426,24 @@ function flower(x, y, r, c, mid){
 const chain = (d) => `<path d="${d}" fill="none" stroke="url(#gold)" stroke-width="3.4" stroke-linecap="round"/>
   <path d="${d}" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".5"/>`;
 
+/* eyes sit at x +/-28 either side of the anchor, lids just above them */
+function eyeLook(shade, lash, extra){
+  return `<path d="M-41 -6 Q-28 -23 -15 -6 Q-28 -13 -41 -6Z" fill="${shade}" opacity=".85"/>
+    <path d="M15 -6 Q28 -23 41 -6 Q28 -13 15 -6Z" fill="${shade}" opacity=".85"/>
+    <g stroke="${lash}" stroke-width="2.6" stroke-linecap="round">
+      <path d="M-42 -4 l-7 -4"/><path d="M-40 -11 l-6 -6"/><path d="M-35 -16 l-4 -7"/>
+      <path d="M42 -4 l7 -4"/><path d="M40 -11 l6 -6"/><path d="M35 -16 l4 -7"/></g>
+    ${extra || ""}`;
+}
+/* lips at the anchor, blush out at x +/-51 where the cheeks are */
+function lipLook(lip, gloss, blush, extra){
+  return `<ellipse cx="-51" cy="-10" rx="15" ry="10" fill="${blush}" opacity=".6"/>
+    <ellipse cx="51" cy="-10" rx="15" ry="10" fill="${blush}" opacity=".6"/>
+    <path d="M0 -4 Q-7 -12 -14 -4 Q-8 3 0 8 Q8 3 14 -4 Q7 -12 0 -4Z" fill="${lip}"/>
+    <path d="M-7 -2 Q0 -6 7 -2 Q0 0 -7 -2Z" fill="${gloss}" opacity=".75"/>
+    ${extra || ""}`;
+}
+
 function shoe(main, trim, extra){
   return `<path d="M-21 7 Q-23 -9 -6 -11 Q7 -13 15 -5 Q22 -1 21 8 Q0 16 -21 7Z" fill="${main}"/>
     <path d="M-21 7 Q0 16 21 8 L21 13 Q0 21 -21 12Z" fill="${trim}"/>
@@ -446,6 +464,42 @@ function gown(bodice, skirt, trim, extra){
 /* Each piece is drawn around (0,0) at its anchor point:
    crown sits above, earrings & necklaces hang below, the rest are centred. */
 const ITEMS = [
+  /* ---- eye makeup: anchor = between the eyes ---- */
+  {id:"rosyeyes", name:"Rosy Shimmer", slot:"eyes", svg: eyeLook("#FF9FC0", "#8A3A5C")},
+  {id:"oceaneyes", name:"Ocean Glitter", slot:"eyes", svg:
+    eyeLook("#7FEFE2", "#1E6B7A", `${gem(-28,-20,3.4,"#FFFFFF")}${gem(28,-20,3.4,"#FFFFFF")}`)},
+  {id:"goldeneyes", name:"Golden Hour", slot:"eyes", svg:
+    eyeLook("#F6C450", "#A96D12", `${star(-28,-22,5,"#FFF8DE")}${star(28,-22,5,"#FFF8DE")}`)},
+  {id:"violeteyes", name:"Purple Dream", slot:"eyes", svg:
+    eyeLook("#A678F0", "#4A2A7A", `${gem(0,-18,5,"#C9A8FF")}`)},
+  {id:"starlashes", name:"Starlight Lashes", slot:"eyes", svg:
+    eyeLook("#DCE8FF", "#2E2A6B", `${star(-40,-18,6,"#FFEBA8")}${star(40,-18,6,"#FFEBA8")}${star(0,-20,5,"#FFF8DE")}`)},
+  {id:"emeraldeyes", name:"Emerald Wink", slot:"eyes", svg:
+    eyeLook("#2FD39B", "#19604A", `${gem(-40,-16,3.6,"#FFEBA8")}${gem(40,-16,3.6,"#FFEBA8")}`)},
+  {id:"rainboweyes", name:"Rainbow Lids", slot:"eyes", svg:
+    `<path d="M-41 -6 Q-28 -23 -15 -6 Q-28 -13 -41 -6Z" fill="#FF7FA8" opacity=".9"/>
+     <path d="M-38 -11 Q-28 -20 -18 -11 Q-28 -15 -38 -11Z" fill="#FFC84A" opacity=".9"/>
+     <path d="M15 -6 Q28 -23 41 -6 Q28 -13 15 -6Z" fill="#7FEFE2" opacity=".9"/>
+     <path d="M18 -11 Q28 -20 38 -11 Q28 -15 18 -11Z" fill="#A678F0" opacity=".9"/>
+     <g stroke="#2E2A3F" stroke-width="2.6" stroke-linecap="round">
+       <path d="M-42 -4 l-7 -4"/><path d="M-38 -14 l-5 -7"/><path d="M42 -4 l7 -4"/><path d="M38 -14 l5 -7"/></g>`},
+  {id:"gembrows", name:"Diamond Brows", slot:"eyes", svg:
+    eyeLook("#CFE3EE", "#5A6472",
+      `${drop(-28,-24,7,11,"#CFE3EE")}${drop(28,-24,7,11,"#CFE3EE")}${gem(0,-16,4,"#FFFFFF")}`)},
+
+  /* ---- lips and blush: anchor = the mouth ---- */
+  {id:"cherry", name:"Cherry Red", slot:"lips", svg: lipLook("#D93F4A", "#FF8F8F", "#FF7F7F")},
+  {id:"candy", name:"Candy Pink", slot:"lips", svg: lipLook("#FF6B9A", "#FFC2D6", "#FF9FC0")},
+  {id:"coral", name:"Coral Shine", slot:"lips", svg: lipLook("#FF8A5C", "#FFD3B8", "#FFAE8A")},
+  {id:"berry", name:"Berry Purple", slot:"lips", svg: lipLook("#8A3A7A", "#D9A8CC", "#C98AC4")},
+  {id:"goldgloss", name:"Golden Gloss", slot:"lips", svg:
+    lipLook("url(#gold)", "#FFF8DE", "#FFD98A", `${star(0,10,5,"#FFF8DE")}`)},
+  {id:"frosted", name:"Frosted Blue", slot:"lips", svg:
+    lipLook("#7FB8E8", "#DCF2FF", "#A8D8F5", `${gem(0,9,3.4,"#FFFFFF")}`)},
+  {id:"glittergloss", name:"Sparkle Gloss", slot:"lips", svg:
+    lipLook("#FF9FC0", "#FFFFFF", "#FFC2D6",
+      `${star(-18,-2,4,"#FFF8DE")}${star(18,-2,4,"#FFF8DE")}${star(0,11,4,"#FFFFFF")}`)},
+  {id:"peach", name:"Peach Blush", slot:"lips", svg: lipLook("#FFA88A", "#FFE2D2", "#FFC2A8")},
   /* ---- shoes: anchor = the foot, mirrored onto the other one ---- */
   {id:"glass", name:"Glass Slippers", slot:"shoes", svg:
     shoe("#DCF0FF", "url(#silver)", `${star(-6,-6,6,"#FFFFFF")}${gem(10,0,4,"#9FD8F5")}`)},
@@ -623,6 +677,8 @@ const ITEMS = [
 
 const SHELVES = [
   {slot:"dress",  label:"Dresses & Gowns"},
+  {slot:"eyes",   label:"Eye Makeup"},
+  {slot:"lips",   label:"Lips & Blush"},
   {slot:"crown",  label:"Crowns & Tiaras"},
   {slot:"ears",   label:"Earrings"},
   {slot:"neck",   label:"Necklaces"},
@@ -842,6 +898,8 @@ const SHOE_POS = {
 };
 const SLOTS_CRITTER = {
   dress:  {pos:[[180,286]], s:1},
+  eyes:   {pos:[[180,151]], s:1},
+  lips:   {pos:[[180,183]], s:1},
   crown:  {pos:[[180,74]],  s:1},
   ears:   {pos:[[110,166],[250,166]], s:1},
   neck:   {pos:[[180,232]], s:1},
@@ -852,6 +910,8 @@ const SLOTS_CRITTER = {
 };
 const SLOTS_MERMAID = {
   dress:  {pos:[[180,222]], s:.7},
+  eyes:   {pos:[[180,113]], s:.74},
+  lips:   {pos:[[180,136]], s:.74},
   crown:  {pos:[[180,60]],  s:.92},
   ears:   {pos:[[128,128],[232,128]], s:1},
   neck:   {pos:[[180,188]], s:.95},
@@ -862,6 +922,8 @@ const SLOTS_MERMAID = {
 };
 const SLOTS_PERSON = {
   dress:  {pos:[[180,268]], s:1.02},
+  eyes:   {pos:[[180,113]], s:.74},
+  lips:   {pos:[[180,136]], s:.74},
   crown:  {pos:[[180,56]],  s:.92},
   ears:   {pos:[[128,128],[232,128]], s:1},
   neck:   {pos:[[180,186]], s:.95},
@@ -917,15 +979,16 @@ const ROSTER = [
   R_("Mango the Monkey","Vine Swing Showoff","c",{fur:"#B57A4A",dark:"#95602E",belly:"#FFD9A8",paw:"#FFD9A8",nose:"#6B4228",muzzle:"#FFD9A8",ears:"round",tail:"thin",legs:"stand",inner:"#FFC2A8",accent:"#B57A4A",
     headMark:`<ellipse cx="180" cy="166" rx="48" ry="40" fill="#FFD9A8"/>`}),
   R_("Hoppy the Frog","Lily Pad Leaper","c",{fur:"#7FD36B",dark:"#5CB049",belly:"#DCF5C2",paw:"#A8E88A",nose:"#3C7A2C",muzzle:"#DCF5C2",ears:"",tail:"",legs:"stand",accent:"#A8E88A",
+    eyesAt:{pos:[[180,106]], s:1.5}, lipsAt:{pos:[[180,180]], s:1},
     headMark:`<circle cx="138" cy="92" r="26" fill="#7FD36B"/><circle cx="222" cy="92" r="26" fill="#7FD36B"/>
       <circle cx="138" cy="90" r="13" fill="#fff"/><circle cx="222" cy="90" r="13" fill="#fff"/>
       <circle cx="138" cy="90" r="7" fill="#13263B"/><circle cx="222" cy="90" r="7" fill="#13263B"/>`}),
 
   /* --- scales and spikes --- */
-  R_("Snappy the Alligator","Swamp Smile Specialist","c",{fur:"#6FBF7A",dark:"#4E9C5A",belly:"#D6F0C2",paw:"#A8DC9A",nose:"#2E6B3C",muzzle:"#D6F0C2",ears:"",tail:"long",legs:"stand",accent:"#6FBF7A",
+  R_("Snappy the Alligator","Swamp Smile Specialist","c",{fur:"#6FBF7A",dark:"#4E9C5A",belly:"#D6F0C2",paw:"#A8DC9A",nose:"#2E6B3C",muzzle:"#D6F0C2",ears:"",tail:"long",legs:"stand",accent:"#6FBF7A",lipsAt:{pos:[[180,200]], s:1},
     front:MARK.snout("#6FBF7A"),bodyMark:`<g fill="#4E9C5A"><path d="M160 238 l-8 -18 l20 4Z"/><path d="M200 238 l8 -18 l-20 4Z"/></g>`}),
   R_("Tilly the Turtle","Slow and Very Shiny","c",{fur:"#8FD6A8",dark:"#6AB888",belly:"#D9F2E2",paw:"#B2E8C4",nose:"#3C7A5C",muzzle:"#D9F2E2",ears:"",tail:"puff",legs:"stand",accent:"#8FD6A8",noBelly:true,bodyMark:MARK.shell("#C9933C","#8A6224")}),
-  R_("Rex the T-Rex","Tiny Arms, Big Heart","c",{fur:"#8ED36B",dark:"#6BB249",belly:"#F0F5C2",paw:"#C2E8A8",nose:"#3C6B2C",muzzle:"#F0F5C2",ears:"",tail:"long",legs:"stand",accent:"#8ED36B",
+  R_("Rex the T-Rex","Tiny Arms, Big Heart","c",{fur:"#8ED36B",dark:"#6BB249",belly:"#F0F5C2",paw:"#C2E8A8",nose:"#3C6B2C",muzzle:"#F0F5C2",ears:"",tail:"long",legs:"stand",accent:"#8ED36B",lipsAt:{pos:[[180,202]], s:1},
     front:MARK.jaws("#8ED36B","#6BB249"),
     headMark:`<g fill="#FFD36B"><path d="M180 70 l-16 -28 l32 0Z"/><path d="M134 100 l-12 -24 l24 4Z"/><path d="M226 100 l12 -24 l-24 4Z"/></g>`,
     bodyMark:`<g fill="#6BB249" opacity=".9"><path d="M126 268 q54 10 108 0 v10 q-54 10 -108 0Z"/><path d="M130 312 q50 10 100 0 v10 q-50 10 -100 0Z"/></g>`}),
@@ -965,7 +1028,8 @@ const ROSTER = [
   R_("Zip the Alien","Came for the Jewellery","c",{fur:"#9FE88A",dark:"#7AC866",belly:"#DCF5C2",paw:"#C2EDA8",nose:"#3C7A2C",muzzle:"#DCF5C2",ears:"",tail:"",legs:"stand",accent:"#9FE88A",
     headMark:MARK.antennae("#7AC866")+`<ellipse cx="180" cy="150" rx="78" ry="82" fill="#9FE88A"/>`}),
   R_("Bongo the Banana Buddy","Goggles On, Mischief Ready","c",{fur:"#FFD95F",dark:"#E0B33C",belly:"#FFE9A8",paw:"#3A3330",nose:"#3A3330",muzzle:"rgba(255,255,255,0)",ears:"",tail:"",legs:"stand",accent:"#FFD95F",
-    noBelly:true,noFace:true,bodyMark:`<path d="M126 300 q54 -14 108 0 v40 q-54 -14 -108 0Z" fill="#5A7ACC"/>
+    noBelly:true,noFace:true,eyesAt:{pos:[[180,136]], s:.78}, lipsAt:{pos:[[180,198]], s:.9},
+    bodyMark:`<path d="M126 300 q54 -14 108 0 v40 q-54 -14 -108 0Z" fill="#5A7ACC"/>
       <path d="M126 300 q54 -14 108 0" stroke="#3A5AAC" stroke-width="4" fill="none"/>`,
     headMark:MARK.goggles()+`<path d="M158 196 q22 16 44 0" stroke="#3A3330" stroke-width="4" fill="none" stroke-linecap="round"/>
       <path d="M176 58 q6 -22 16 -26" stroke="#3A3330" stroke-width="4" fill="none" stroke-linecap="round"/>`}),
@@ -975,7 +1039,8 @@ const CHARACTERS = ROSTER.map(r => ({
   name: r.n,
   title: r.t,
   slots: r.k === "m" ? SLOTS_MERMAID : r.k === "p" ? SLOTS_PERSON
-    : Object.assign({}, SLOTS_CRITTER, {shoes:{pos:SHOE_POS[r.legs] || SHOE_POS.stand, s:1}}),
+    : Object.assign({}, SLOTS_CRITTER, {shoes:{pos:SHOE_POS[r.legs] || SHOE_POS.stand, s:1}},
+        r.eyesAt ? {eyes:r.eyesAt} : null, r.lipsAt ? {lips:r.lipsAt} : null),
   draw: () => r.k === "m" ? mermaid(r) : r.k === "p" ? person(r) : critter(r),
 }));
 
@@ -1009,7 +1074,9 @@ SHELVES.forEach(sh => {
     b.id = "jewel-" + item.id;
     b.dataset.item = item.id;
     b.setAttribute("aria-pressed", "false");
-    const box = sh.slot === "shoes" ? "-30 -38 60 64"
+    const box = sh.slot === "eyes" ? "-54 -30 108 42"
+      : sh.slot === "lips" ? "-70 -26 140 44"
+      : sh.slot === "shoes" ? "-30 -38 60 64"
       : sh.slot === "dress" ? "-100 -70 200 206"
       : sh.slot === "crown" ? "-56 -52 112 60"
       : sh.slot === "ears" ? "-26 -8 52 46"
@@ -1051,8 +1118,9 @@ function render(){
   const total = SLOT_ORDER.length;
   const n = SLOT_ORDER.filter(s => worn[s]).length;
   [...pipsEl.children].forEach((p, i) => p.classList.toggle("lit", i < n));
-  const words = ["Bare as a pebble","A little glimmer","Getting pretty","Properly shiny",
-                 "Dazzling!","Ocean royalty","Nearly there","Almost perfect","DAZZLING QUEEN!"];
+  const words = ["Bare as a pebble","A little glimmer","Getting there","Getting pretty",
+                 "Properly shiny","Really shiny","Dazzling!","Ocean royalty","Nearly there",
+                 "Almost perfect","DAZZLING QUEEN!"];
   verdictEl.textContent = n === total ? words[total] : `${n} of ${total} · ${words[n]}`;
   verdictEl.classList.toggle("max", n === total);
   [...pickerGrid.children].forEach((b, i) => b.setAttribute("aria-current", String(i === charIndex)));
@@ -1325,7 +1393,7 @@ function start(state){
   } else {
     /* open in a pretty resting state, not an empty one */
     worn = closets[0] = {dress:"seasilk", crown:"tiara", ears:"peardrop", neck:"pearlstrand",
-      low:"goldbands", shoes:"finslippers"};
+      low:"goldbands", shoes:"finslippers", eyes:"oceaneyes", lips:"candy"};
   }
   render();
 }

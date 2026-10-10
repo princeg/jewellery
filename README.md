@@ -1,7 +1,8 @@
 # Mermaid's Jewel Box
 
-A shiny underwater dress-up game. Pick dresses, shoes and jewellery from the
-treasure tray and put them on a mermaid — or on any of her forty-nine friends.
+A shiny underwater dress-up game. Pick dresses, shoes, makeup and jewellery
+from the treasure tray and put them on a mermaid — or on any of her
+forty-nine friends.
 
 ![single file](https://img.shields.io/badge/build-none%20required-F6C450) ![vanilla](https://img.shields.io/badge/stack-HTML%20%2B%20SVG%20%2B%20canvas-7FEFE2)
 
@@ -15,18 +16,22 @@ the whole game is one file.
 - **Tap a jewel to put it on, tap it again to take it off.** Every piece knows
   where it belongs, so earrings always land on ears and bands always land on
   the tail or ankles.
-- **46 pieces** across eight shelves: dresses & gowns, crowns & tiaras,
+- **62 pieces** across ten shelves: dresses & gowns, eye makeup, lips & blush,
+  crowns & tiaras,
   earrings, necklaces, bracelets, brooches, anklets & tail bands, and shoes &
   slippers. Dresses go on first, so the jewellery always sits on top of them.
   Shoes know where each friend's feet are — paws, flippers, stumpy bird legs,
-  octopus tentacles, or a mermaid's fluke.
+  octopus tentacles, or a mermaid's fluke. Makeup works the same way: eight eye
+  looks and eight lip colours anchor to each friend's own face, so they land
+  right on a frog's bulging eyes, a goggle-wearing buddy, or an alligator's
+  snout.
 - **50 characters**, each remembering their own outfit — switch with the gold
   arrows or the left/right arrow keys, or tap **All 50 friends** for the whole
   list. Mermaids, princesses and a fairy; dogs, cats, bunnies and farm animals;
   lions, tigers, elephants and giraffes; an alligator, three dinosaurs and a
   dragon; owls, flamingos, bees and butterflies; an octopus, a robot, an alien
   and a goggle-wearing yellow buddy.
-- **Shine meter** fills as more goes on. Eight out of eight earns a sparkle
+- **Shine meter** fills as more goes on. Ten out of ten earns a sparkle
   shower, and every one of the fifty can reach it.
 - **Surprise me!** rolls a random full outfit; **Take it all off** clears it.
 - **Music and sounds.** A slow underwater melody plus a chime for every piece
@@ -47,7 +52,8 @@ Web Audio stays muted too.
 Everything lives in the `<script>` block at the bottom of `index.html`.
 
 - **A new jewel or dress**: add an entry to `ITEMS` with a `slot`
-  (`dress`, `crown`, `ears`, `neck`, `wrist`, `brooch`, `low`, `shoes`) and an SVG string drawn
+  (`dress`, `eyes`, `lips`, `crown`, `ears`, `neck`, `wrist`, `brooch`, `low`,
+  `shoes`) and an SVG string drawn
   around `(0,0)` — crowns sit above the anchor, earrings and necklaces hang
   below it, everything else is centred on it.
 - **A new character**: add an `R_(...)` entry to `ROSTER`. Nearly every friend
