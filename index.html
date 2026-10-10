@@ -113,6 +113,29 @@
   .soundbtn[aria-pressed="true"] .waves{opacity:1}
   .soundbtn[aria-pressed="false"] .waves{display:none}
   .soundbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-dk)}
+  .picker[hidden]{display:none}
+  .picker{
+    position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;gap:10px;padding:14px;
+    background:linear-gradient(180deg,rgba(7,26,51,.97),rgba(12,42,77,.97));
+  }
+  .picker h2{
+    margin:0;font-family:var(--display);font-weight:900;font-size:1.15rem;color:var(--gold-lt);
+    text-align:center;
+  }
+  .picker-grid{
+    flex:1 1 auto;min-height:0;overflow-y:auto;display:grid;align-content:start;gap:6px;
+    grid-template-columns:repeat(auto-fill,minmax(112px,1fr));
+    scrollbar-width:thin;scrollbar-color:var(--gold) transparent;
+  }
+  .picker-grid button{
+    padding:7px 6px;border-radius:11px;cursor:pointer;font-family:var(--ui);font-weight:700;
+    font-size:.72rem;line-height:1.2;text-align:center;color:var(--pearl);
+    background:rgba(255,247,238,.07);border:1.5px solid rgba(255,247,238,.2);
+  }
+  .picker-grid button:hover{border-color:var(--gold);background:rgba(246,196,80,.16)}
+  .picker-grid button[aria-current="true"]{
+    border-color:var(--gold);background:linear-gradient(170deg,#FFF9E6,var(--gold) 70%);color:var(--ink);
+  }
   #sparkles{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
   .glowpool{
     position:absolute;left:50%;bottom:7%;transform:translateX(-50%);
@@ -141,9 +164,8 @@
     line-height:1.05;margin:0;color:var(--pearl);text-wrap:balance;
   }
   .nameplate .what{margin:2px 0 0;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--aqua);font-weight:700}
-  .dots{display:flex;gap:7px;justify-content:center;margin-top:8px}
-  .dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,247,238,.3)}
-  .dots i.on{background:var(--gold);box-shadow:0 0 9px var(--gold)}
+  .count{margin:5px 0 0;font-size:.78rem;font-weight:700;color:rgba(255,247,238,.6);
+    font-variant-numeric:tabular-nums;letter-spacing:.06em}
 
   /* shine meter */
   .meter{
@@ -292,6 +314,11 @@
           </button>
           <svg class="doll" id="doll" viewBox="0 0 360 470" role="img" aria-label="Character wearing jewellery"></svg>
           <canvas id="sparkles" aria-hidden="true"></canvas>
+          <div class="picker" id="picker" hidden>
+            <h2>Pick a friend</h2>
+            <div class="picker-grid" id="pickerGrid"></div>
+            <button class="btn ghost" id="pickerClose" type="button">Back to the jewels</button>
+          </div>
         </div>
       </div>
 
@@ -300,7 +327,7 @@
         <div class="nameplate">
           <p class="who" id="who">Marina the Mermaid</p>
           <p class="what" id="what">Coral Reef Princess</p>
-          <div class="dots" id="dots" aria-hidden="true"></div>
+          <p class="count" id="count">1 of 50</p>
         </div>
         <button class="arrow" id="next" aria-label="Next character">›</button>
       </div>
@@ -313,6 +340,7 @@
 
       <div class="controls">
         <button class="btn" id="surprise">Surprise me!</button>
+        <button class="btn ghost" id="friends">All 50 friends</button>
         <button class="btn ghost" id="clear">Take it all off</button>
       </div>
     </section>
@@ -398,10 +426,57 @@ function flower(x, y, r, c, mid){
 const chain = (d) => `<path d="${d}" fill="none" stroke="url(#gold)" stroke-width="3.4" stroke-linecap="round"/>
   <path d="${d}" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".5"/>`;
 
+function gown(bodice, skirt, trim, extra){
+  return `<path d="M-46 -30 Q0 -14 46 -30 L86 92 Q0 116 -86 92Z" fill="${skirt}"/>
+    <path d="M-38 -56 Q0 -42 38 -56 L46 -30 Q0 -14 -46 -30Z" fill="${bodice}"/>
+    <path d="M-86 92 Q0 116 86 92 L88 104 Q0 128 -88 104Z" fill="${trim}"/>
+    <path d="M-46 -30 Q0 -14 46 -30 L47 -20 Q0 -4 -47 -20Z" fill="${trim}" opacity=".92"/>
+    <path d="M-33 -58 q7 -20 23 -17" stroke="${trim}" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M33 -58 q-7 -20 -23 -17" stroke="${trim}" stroke-width="6" fill="none" stroke-linecap="round"/>
+    ${extra || ""}`;
+}
+
 /* ============================ the jewellery ============================ */
 /* Each piece is drawn around (0,0) at its anchor point:
    crown sits above, earrings & necklaces hang below, the rest are centred. */
 const ITEMS = [
+  /* ---- dresses: anchor = the middle of the body ---- */
+  {id:"party", name:"Party Frock", slot:"dress", svg:
+    gown("#E8577F", "#FF9FC0", "#FFF1F6",
+      `<g fill="#FFF1F6" opacity=".9"><circle cx="-34" cy="26" r="5"/><circle cx="4" cy="42" r="6"/>
+       <circle cx="40" cy="22" r="5"/><circle cx="-14" cy="70" r="5"/><circle cx="34" cy="68" r="4"/></g>` + heart(0,-34,11,"#FFF1F6"))},
+  {id:"ballgown", name:"Ocean Ball Gown", slot:"dress", svg:
+    gown("#2F7FD3", "#6FB8F0", "#DCF2FF",
+      `<path d="M-60 40 q30 18 60 0 q30 18 60 0" fill="none" stroke="#DCF2FF" stroke-width="4"/>
+       <path d="M-70 70 q35 20 70 0 q35 20 70 0" fill="none" stroke="#DCF2FF" stroke-width="4"/>` + gem(0,-34,9,"#7FEFE2"))},
+  {id:"tutu", name:"Rainbow Tutu", slot:"dress", svg:
+    `<path d="M-40 -56 Q0 -42 40 -56 L46 -18 Q0 -2 -46 -18Z" fill="#FF7FA8"/>
+     <path d="M-50 -18 Q0 -2 50 -18 L74 24 Q0 48 -74 24Z" fill="#FFC84A"/>
+     <path d="M-64 14 Q0 38 64 14 L82 56 Q0 82 -82 56Z" fill="#7FEFE2"/>
+     <path d="M-76 46 Q0 72 76 46 L88 92 Q0 118 -88 92Z" fill="#C9A8FF"/>
+     ${star(0,-36,13,"#FFEBA8")}`},
+  {id:"starry", name:"Starry Night Gown", slot:"dress", svg:
+    gown("#2E2A6B", "#4A48A8", "#FFEBA8",
+      star(-36,24,8,"#FFEBA8") + star(26,44,7,"#FFEBA8") + star(46,16,6,"#FFF8DE") +
+      star(-18,70,6,"#FFEBA8") + star(0,-34,10,"#FFF8DE"))},
+  {id:"goldgown", name:"Cloth of Gold", slot:"dress", svg:
+    gown("url(#gold)", "#F6C450", "#FFF8DE",
+      `<path d="M-50 10 L50 10 M-64 44 L64 44 M-76 78 L76 78" stroke="#FFF8DE" stroke-width="3" opacity=".7"/>` + gem(0,-36,10,"#FF7FA8"))},
+  {id:"blossom", name:"Blossom Frock", slot:"dress", svg:
+    gown("#FFF7EE", "#FFFDF7", "#A8E8B4",
+      flower(-34,30,13,"#FF9FC0") + flower(28,52,12,"#FFC84A") + flower(44,18,10,"#C9A8FF") + flower(-10,74,11,"#FF9FC0"))},
+  {id:"seasilk", name:"Sea Silk Gown", slot:"dress", svg:
+    gown("#1E9FB4", "#4FE0C8", "#FFF7EE",
+      shell(-30,36,14,"#FFC2D6") + shell(30,56,13,"#FFE0B5") + shell(0,86,12,"#FFC2D6") + gem(0,-34,9,"#FFEBA8"))},
+  {id:"polka", name:"Polka Party Dress", slot:"dress", svg:
+    gown("#D93F4A", "#FF6B6B", "#FFFDF7",
+      `<g fill="#FFFDF7"><circle cx="-44" cy="20" r="7"/><circle cx="-6" cy="40" r="8"/><circle cx="36" cy="22" r="7"/>
+       <circle cx="-30" cy="72" r="7"/><circle cx="24" cy="76" r="6"/><circle cx="60" cy="54" r="6"/></g>`)},
+  {id:"snowcape", name:"Snow Queen Cape", slot:"dress", svg:
+    `<path d="M-44 -46 Q0 -30 44 -46 L92 96 Q0 122 -92 96Z" fill="#CFE9FF" opacity=".95"/>
+     <path d="M-92 96 Q0 122 92 96 L94 112 Q0 140 -94 112Z" fill="#FFFDF7"/>
+     <path d="M-44 -46 Q0 -30 44 -46 L46 -32 Q0 -16 -46 -32Z" fill="#FFFDF7"/>
+     ${star(-30,24,8,"#FFFFFF")}${star(32,52,7,"#FFFFFF")}${star(6,84,6,"#FFFFFF")}${gem(0,-40,9,"#9FD8F5")}`},
   /* ---- crowns: anchor = bottom centre, art goes up ---- */
   {id:"tiara", name:"Pearl Tiara", slot:"crown", svg:
     `<path d="M-46 0 Q0 -12 46 0 Q0 7 -46 0Z" fill="url(#gold)"/>
@@ -514,6 +589,7 @@ const ITEMS = [
 ];
 
 const SHELVES = [
+  {slot:"dress",  label:"Dresses & Gowns"},
   {slot:"crown",  label:"Crowns & Tiaras"},
   {slot:"ears",   label:"Earrings"},
   {slot:"neck",   label:"Necklaces"},
@@ -524,8 +600,10 @@ const SHELVES = [
 const SLOT_ORDER = SHELVES.map(s => s.slot);
 
 /* ============================ the characters ============================ */
-/* A shared cartoon body keeps all six friends consistent, so a necklace
-   that fits one fits them all. The mermaid gets her own tail. */
+/* Fifty friends. Nearly all of them are the same cartoon body with swappable
+   ears, tails, legs and markings, which is what lets one necklace fit a bunny,
+   a triceratops and a robot. Mermaids and princesses get their own shapes. */
+
 function face(cx, cy, r, o){
   const eyeY = cy + r*0.02, eyeX = r*0.36;
   return `
@@ -538,164 +616,323 @@ function face(cx, cy, r, o){
     <path d="M${cx+eyeX-r*0.14} ${eyeY-r*0.26} q${r*0.14} ${-r*0.1} ${r*0.28} 0" stroke="#13263B" stroke-width="${r*0.045}" fill="none" stroke-linecap="round"/>
     <ellipse cx="${cx}" cy="${cy+r*0.26}" rx="${r*0.11}" ry="${r*0.085}" fill="${o.nose||'#13263B'}"/>
     <path d="M${cx-r*0.17} ${cy+r*0.42} q${r*0.17} ${r*0.16} ${r*0.34} 0" stroke="#13263B" stroke-width="${r*0.05}" fill="none" stroke-linecap="round"/>
-    <ellipse cx="${cx-r*0.66}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.1}" fill="#FF8FB4" opacity=".6"/>
-    <ellipse cx="${cx+r*0.66}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.1}" fill="#FF8FB4" opacity=".6"/>`;
+    <ellipse cx="${cx-r*0.66}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.1}" fill="#FF8FB4" opacity=".55"/>
+    <ellipse cx="${cx+r*0.66}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.1}" fill="#FF8FB4" opacity=".55"/>`;
 }
 
-/* standing critter: head r=78 at (180,150); body 180,300; wrists 108/252,338 */
-function critter(o){
-  return `
-    ${o.behind||""}
-    <!-- legs -->
-    <rect x="146" y="344" width="30" height="76" rx="15" fill="${o.fur}" stroke="${o.furDark}" stroke-width="2.5"/>
-    <rect x="184" y="344" width="30" height="76" rx="15" fill="${o.fur}" stroke="${o.furDark}" stroke-width="2.5"/>
-    <ellipse cx="161" cy="424" rx="21" ry="13" fill="${o.paw||o.furDark}"/>
-    <ellipse cx="199" cy="424" rx="21" ry="13" fill="${o.paw||o.furDark}"/>
-    <!-- body -->
-    <ellipse cx="180" cy="300" rx="64" ry="74" fill="${o.fur}"/>
-    <ellipse cx="180" cy="312" rx="41" ry="52" fill="${o.belly}"/>
-    <!-- arms -->
-    <path d="M130 266 Q100 300 110 338" stroke="${o.furDark}" stroke-width="31" fill="none" stroke-linecap="round"/>
-    <path d="M230 266 Q260 300 250 338" stroke="${o.furDark}" stroke-width="31" fill="none" stroke-linecap="round"/>
-    <path d="M130 266 Q100 300 110 338" stroke="${o.fur}" stroke-width="26" fill="none" stroke-linecap="round"/>
-    <path d="M230 266 Q260 300 250 338" stroke="${o.fur}" stroke-width="26" fill="none" stroke-linecap="round"/>
-    <circle cx="109" cy="344" r="15" fill="${o.paw||o.furDark}"/>
-    <circle cx="251" cy="344" r="15" fill="${o.paw||o.furDark}"/>
-    ${o.ears||""}
-    <!-- head -->
-    <circle cx="180" cy="150" r="78" fill="${o.fur}"/>
-    ${o.headExtra||""}
-    ${face(180,150,78,o)}
-    ${o.front||""}`;
+/* ---------- swappable parts ---------- */
+function earsOf(kind, c, inner){
+  switch(kind){
+    case "round":  return `<circle cx="120" cy="88" r="27" fill="${c}"/><circle cx="240" cy="88" r="27" fill="${c}"/>
+      <circle cx="120" cy="88" r="14" fill="${inner}"/><circle cx="240" cy="88" r="14" fill="${inner}"/>`;
+    case "pointy": return `<path d="M116 94 L122 36 L168 74Z" fill="${c}"/><path d="M126 86 L130 54 L154 76Z" fill="${inner}"/>
+      <path d="M244 94 L238 36 L192 74Z" fill="${c}"/><path d="M234 86 L230 54 L206 76Z" fill="${inner}"/>`;
+    case "floppy": return `<path d="M112 92 Q92 42 128 48 Q142 70 140 100Z" fill="${c}"/>
+      <path d="M248 92 Q268 42 232 48 Q218 70 220 100Z" fill="${c}"/>`;
+    case "hang":   return `<path d="M112 108 Q86 112 96 168 Q118 174 130 136Z" fill="${c}"/>
+      <path d="M248 108 Q274 112 264 168 Q242 174 230 136Z" fill="${c}"/>`;
+    case "long":   return `<path d="M146 84 Q122 6 152 4 Q174 30 168 90Z" fill="${c}"/><path d="M149 76 Q136 20 152 20 Q162 42 160 82Z" fill="${inner}"/>
+      <path d="M214 84 Q238 6 208 4 Q186 30 192 90Z" fill="${c}"/><path d="M211 76 Q224 20 208 20 Q198 42 200 82Z" fill="${inner}"/>`;
+    case "tiny":   return `<ellipse cx="126" cy="94" rx="18" ry="15" fill="${c}"/><ellipse cx="234" cy="94" rx="18" ry="15" fill="${c}"/>`;
+    case "big":    return `<ellipse cx="102" cy="152" rx="36" ry="46" fill="${c}"/><ellipse cx="258" cy="152" rx="36" ry="46" fill="${c}"/>
+      <ellipse cx="104" cy="152" rx="21" ry="29" fill="${inner}"/><ellipse cx="256" cy="152" rx="21" ry="29" fill="${inner}"/>`;
+    case "tuft":   return `<path d="M120 92 Q102 42 136 60 Q146 76 146 100Z" fill="${c}"/><path d="M240 92 Q258 42 224 60 Q214 76 214 100Z" fill="${c}"/>`;
+    case "horns":  return `<path d="M130 78 Q114 42 144 52 Q148 66 152 84Z" fill="${inner}"/><path d="M230 78 Q246 42 216 52 Q212 66 208 84Z" fill="${inner}"/>`;
+    case "tufts":  return `<path d="M128 84 L118 44 L158 70Z" fill="${c}"/><path d="M232 84 L242 44 L202 70Z" fill="${c}"/>`;
+    default: return "";
+  }
 }
 
-const SLOTS_CRITTER = {
-  crown:{pos:[[180,74]],s:1},
-  ears:{pos:[[110,166],[250,166]],s:1},
-  neck:{pos:[[180,232]],s:1},
-  brooch:{pos:[[180,296]],s:1},
-  wrist:{pos:[[109,344],[251,344]],s:1},
-  low:{pos:[[161,412],[199,412]],s:.78},
+function tailOf(kind, c, accent){
+  switch(kind){
+    case "thin":   return `<path d="M242 326 Q306 318 288 254" stroke="${c}" stroke-width="18" fill="none" stroke-linecap="round"/>`;
+    case "bushy":  return `<path d="M238 330 Q312 322 300 246" stroke="${c}" stroke-width="30" fill="none" stroke-linecap="round"/>
+      <circle cx="301" cy="250" r="19" fill="${accent}"/>`;
+    case "puff":   return `<circle cx="266" cy="332" r="23" fill="${accent}"/>`;
+    case "curl":   return `<path d="M242 320 q26 -4 20 -20 q-6 -16 -18 -6" stroke="${c}" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+    case "long":   return `<path d="M238 334 Q318 338 330 262" stroke="${c}" stroke-width="24" fill="none" stroke-linecap="round"/>`;
+    case "tufted": return `<path d="M240 330 Q304 326 296 258" stroke="${c}" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <circle cx="296" cy="252" r="14" fill="${accent}"/>`;
+    case "fish":   return `<path d="M246 320 Q306 288 324 310 Q306 334 324 356 Q298 372 246 340Z" fill="${accent}"/>`;
+    default: return "";
+  }
+}
+
+function legsOf(kind, c, dark, paw){
+  if(kind === "fins") return `<ellipse cx="154" cy="410" rx="32" ry="14" fill="${paw}" transform="rotate(-9 154 410)"/>
+    <ellipse cx="206" cy="410" rx="32" ry="14" fill="${paw}" transform="rotate(9 206 410)"/>`;
+  if(kind === "tentacles"){
+    let s = "";
+    for(let i = 0; i < 5; i++){ const x = 128 + i * 26;
+      s += `<path d="M${x} 348 Q${x-12} 394 ${x+8} 424" stroke="${c}" stroke-width="18" fill="none" stroke-linecap="round"/>`; }
+    return s;
+  }
+  if(kind === "none") return "";
+  if(kind === "stump") return `<ellipse cx="158" cy="406" rx="24" ry="18" fill="${dark}"/><ellipse cx="202" cy="406" rx="24" ry="18" fill="${dark}"/>`;
+  return `<rect x="146" y="344" width="30" height="76" rx="15" fill="${c}" stroke="${dark}" stroke-width="2.5"/>
+    <rect x="184" y="344" width="30" height="76" rx="15" fill="${c}" stroke="${dark}" stroke-width="2.5"/>
+    <ellipse cx="161" cy="424" rx="21" ry="13" fill="${paw}"/><ellipse cx="199" cy="424" rx="21" ry="13" fill="${paw}"/>`;
+}
+
+/* ---------- markings and bits, all optional ---------- */
+const MARK = {
+  spots: c => `<circle cx="146" cy="272" r="13" fill="${c}" opacity=".85"/><circle cx="214" cy="256" r="10" fill="${c}" opacity=".85"/>
+    <circle cx="208" cy="330" r="14" fill="${c}" opacity=".85"/><circle cx="150" cy="330" r="9" fill="${c}" opacity=".85"/>
+    <circle cx="214" cy="126" r="11" fill="${c}" opacity=".7"/>`,
+  stripes: c => `<g fill="${c}" opacity=".9"><path d="M126 258 q22 10 20 26 q-20 -6 -28 -12Z"/><path d="M234 258 q-22 10 -20 26 q20 -6 28 -12Z"/>
+    <path d="M124 302 q22 8 22 24 q-22 -6 -28 -12Z"/><path d="M236 302 q-22 8 -22 24 q22 -6 28 -12Z"/>
+    <path d="M160 82 q8 18 2 28 q-12 -10 -14 -22Z"/><path d="M200 82 q-8 18 -2 28 q12 -10 14 -22Z"/></g>`,
+  patch: c => `<path d="M180 72 Q146 76 134 110 Q160 100 180 100 Q200 100 226 110 Q214 76 180 72Z" fill="${c}"/>`,
+  cheeks: c => `<ellipse cx="132" cy="150" rx="17" ry="23" fill="${c}"/><ellipse cx="228" cy="150" rx="17" ry="23" fill="${c}"/>`,
+  mane: c => `<path d="M180 40 Q84 44 76 150 Q80 256 180 260 Q280 256 284 150 Q276 44 180 40Z" fill="${c}"/>
+    <g fill="${c}"><path d="M180 34 l-14 -22 l28 0Z"/><path d="M96 92 l-22 -14 l14 -20Z"/><path d="M264 92 l22 -14 l-14 -20Z"/>
+    <path d="M80 206 l-24 6 l10 20Z"/><path d="M280 206 l24 6 l-10 20Z"/></g>`,
+  wool: c => `<g fill="${c}"><circle cx="140" cy="258" r="26"/><circle cx="180" cy="244" r="28"/><circle cx="220" cy="258" r="26"/>
+    <circle cx="132" cy="306" r="26"/><circle cx="228" cy="306" r="26"/><circle cx="180" cy="300" r="30"/>
+    <circle cx="150" cy="348" r="24"/><circle cx="210" cy="348" r="24"/>
+    <circle cx="146" cy="96" r="20"/><circle cx="180" cy="84" r="22"/><circle cx="214" cy="96" r="20"/></g>`,
+  spikes: c => `<g fill="${c}"><path d="M180 70 l-16 -26 l32 0Z"/><path d="M146 242 l-10 -24 l24 2Z"/><path d="M214 242 l10 -24 l-24 2Z"/>
+    <path d="M300 300 l-6 -26 l22 10Z"/></g>`,
+  plates: c => `<g fill="${c}"><path d="M150 236 l-22 -34 l40 6Z"/><path d="M210 236 l22 -34 l-40 6Z"/>
+    <path d="M124 290 l-30 -26 l34 -6Z"/><path d="M236 290 l30 -26 l-34 -6Z"/></g>`,
+  frill: c => `<path d="M180 46 Q78 48 72 164 Q128 128 180 128 Q232 128 288 164 Q282 48 180 46Z" fill="${c}"/>
+    <g fill="none" stroke="rgba(255,255,255,.4)" stroke-width="3"><path d="M128 54 L112 150"/><path d="M180 48 L180 128"/><path d="M232 54 L248 150"/></g>`,
+  beak: c => `<path d="M164 178 L180 204 L196 178 Q180 170 164 178Z" fill="${c}"/>`,
+  bill: c => `<ellipse cx="180" cy="186" rx="30" ry="15" fill="${c}"/><path d="M152 186 q28 12 56 0" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>`,
+  snout: c => `<ellipse cx="180" cy="198" rx="62" ry="22" fill="${c}"/><ellipse cx="162" cy="192" rx="5" ry="4" fill="#13263B"/>
+    <ellipse cx="198" cy="192" rx="5" ry="4" fill="#13263B"/>
+    <g fill="#fff"><path d="M132 208 l6 12 l8 -12Z"/><path d="M154 210 l6 13 l8 -13Z"/><path d="M190 210 l6 13 l8 -13Z"/><path d="M214 208 l6 12 l8 -12Z"/></g>`,
+  jaws: (c, d) => `<path d="M124 178 Q180 160 236 178 L236 196 Q180 208 124 196Z" fill="${c}"/>
+    <path d="M124 196 Q180 234 236 196 Q180 222 124 196Z" fill="${d}"/>
+    <ellipse cx="180" cy="208" rx="26" ry="10" fill="#E0557A"/>
+    <g fill="#fff"><path d="M136 196 l5 14 l8 -14Z"/><path d="M158 198 l5 15 l8 -15Z"/><path d="M190 198 l5 15 l8 -15Z"/><path d="M212 196 l5 14 l8 -14Z"/>
+      <path d="M146 180 l6 -12 l7 12Z"/><path d="M200 180 l6 -12 l7 12Z"/></g>`,
+  trunk: c => `<path d="M180 180 Q186 240 162 268" stroke="${c}" stroke-width="26" fill="none" stroke-linecap="round"/>`,
+  shell: (c, d) => `<ellipse cx="180" cy="300" rx="70" ry="76" fill="${c}"/>
+    <g fill="none" stroke="${d}" stroke-width="3.5"><path d="M180 226 v148"/><path d="M112 282 q68 22 136 0"/><path d="M116 330 q64 -20 128 0"/></g>`,
+  wings: c => `<path d="M116 262 Q50 206 44 272 Q72 304 122 300Z" fill="${c}"/><path d="M244 262 Q310 206 316 272 Q288 304 238 300Z" fill="${c}"/>`,
+  flutter: (c, d) => `<path d="M120 258 Q34 188 40 276 Q62 320 126 302Z" fill="${c}"/><path d="M240 258 Q326 188 320 276 Q298 320 234 302Z" fill="${c}"/>
+    <circle cx="74" cy="258" r="13" fill="${d}"/><circle cx="286" cy="258" r="13" fill="${d}"/>`,
+  antennae: c => `<path d="M156 78 Q140 36 122 30" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M204 78 Q220 36 238 30" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="120" cy="27" r="9" fill="${c}"/><circle cx="240" cy="27" r="9" fill="${c}"/>`,
+  whiskers: c => `<g stroke="${c}" stroke-width="2.6" stroke-linecap="round" opacity=".9">
+    <path d="M122 182 L82 174"/><path d="M122 192 L84 198"/><path d="M238 182 L278 174"/><path d="M238 192 L276 198"/></g>`,
+  horn: () => `<path d="M180 72 L166 22 Q180 8 194 22Z" fill="url(#gold)" stroke="#A96D12" stroke-width="1.6"/>
+    <path d="M172 48 l16 -6 M174 34 l12 -5" stroke="#A96D12" stroke-width="2.4" stroke-linecap="round"/>`,
+  goggles: () => `<rect x="112" y="128" width="136" height="20" rx="8" fill="#6F7B8A"/>
+    <circle cx="180" cy="138" r="40" fill="#C6D3DF" stroke="#6F7B8A" stroke-width="9"/>
+    <circle cx="180" cy="138" r="19" fill="#fff"/><circle cx="180" cy="138" r="11" fill="#2E2A25"/>
+    <circle cx="174" cy="132" r="4" fill="#fff"/>`,
+  bolts: c => `<circle cx="112" cy="150" r="11" fill="${c}"/><circle cx="248" cy="150" r="11" fill="${c}"/>
+    <path d="M180 66 L180 36" stroke="${c}" stroke-width="6" stroke-linecap="round"/><circle cx="180" cy="28" r="11" fill="#FF7FA8"/>`,
+  mask: c => `<path d="M118 146 Q180 122 242 146 Q238 176 180 180 Q122 176 118 146Z" fill="${c}" opacity=".85"/>`,
+  belly: c => `<ellipse cx="180" cy="312" rx="41" ry="52" fill="${c}"/>`,
 };
 
-const CHARACTERS = [
-  {
-    name:"Marina the Mermaid", title:"Coral Reef Princess",
-    slots:{
-      crown:{pos:[[180,60]],s:.92},
-      ears:{pos:[[128,128],[232,128]],s:1},
-      neck:{pos:[[180,188]],s:.95},
-      brooch:{pos:[[180,228]],s:.95},
-      wrist:{pos:[[122,286],[238,286]],s:1},
-      low:{pos:[[180,348]],s:1.25},
-    },
-    draw:()=>`
-      <!-- hair behind -->
-      <path d="M180 32 C104 32 78 92 86 146 C80 212 94 268 106 326 C128 272 110 240 118 206
-        C112 150 128 104 180 100 C232 104 248 150 242 206 C250 240 232 272 254 326
-        C266 268 280 212 274 146 C282 92 256 32 180 32Z" fill="url(#hair)"/>
-      <!-- tail -->
-      <path d="M180 240 C212 248 222 290 214 332 C208 366 196 382 192 398
-        C214 384 258 392 276 426 C250 444 206 442 180 428 C154 442 110 444 84 426
-        C102 392 146 384 168 398 C164 382 152 366 146 332 C138 290 148 248 180 240Z" fill="url(#tail)"/>
-      <g opacity=".45">
-        <path d="M160 280 q20 12 40 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
-        <path d="M156 306 q24 13 48 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
-        <path d="M158 332 q22 12 44 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
-        <path d="M164 356 q16 10 32 0" stroke="#BFFFF4" stroke-width="3" fill="none"/>
-      </g>
-      <!-- torso -->
-      <ellipse cx="180" cy="214" rx="40" ry="48" fill="#FFD9BE"/>
-      <path d="M140 206 q40 -26 80 0 q-6 26 -40 30 q-34 -4 -40 -30Z" fill="#2FD39B"/>
-      ${shell(160,204,17,"#FFC2D6")}${shell(200,204,17,"#FFC2D6")}
-      <!-- arms -->
-      <path d="M146 196 Q118 236 124 282" stroke="#FFD9BE" stroke-width="20" fill="none" stroke-linecap="round"/>
-      <path d="M214 196 Q242 236 236 282" stroke="#FFD9BE" stroke-width="20" fill="none" stroke-linecap="round"/>
-      <!-- neck + head -->
-      <rect x="166" y="150" width="28" height="30" rx="12" fill="#F7C9A8"/>
-      <circle cx="180" cy="112" r="58" fill="#FFD9BE"/>
-      <path d="M122 110 C122 56 148 36 180 36 C212 36 238 56 238 110 C222 86 206 76 180 76 C154 76 138 86 122 110Z" fill="url(#hair)"/>
-      ${face(180,112,58,{muzzle:"rgba(255,255,255,0)",nose:"#D98A6E"})}`
-  },
-  {
-    name:"Bluey the Pup", title:"Backyard Adventurer",
-    slots:SLOTS_CRITTER,
-    draw:()=>critter({
-      fur:"#5FA9DF", furDark:"#3D7FB4", belly:"#C9E6FA", paw:"#D7EDFB", nose:"#1B3A55",
-      muzzle:"#E8F5FE",
-      behind:`<path d="M240 330 Q296 324 300 272" stroke="#5FA9DF" stroke-width="22" fill="none" stroke-linecap="round"/>
-              <circle cx="302" cy="264" r="14" fill="#C9E6FA"/>`,
-      ears:`<path d="M112 92 Q92 42 128 48 Q142 70 140 100Z" fill="#3D7FB4"/>
-            <path d="M248 92 Q268 42 232 48 Q218 70 220 100Z" fill="#3D7FB4"/>`,
-      headExtra:`<path d="M180 72 Q146 76 134 110 Q160 100 180 100 Q200 100 226 110 Q214 76 180 72Z" fill="#3D7FB4"/>
-                 <ellipse cx="132" cy="150" rx="16" ry="22" fill="#C9E6FA"/>
-                 <ellipse cx="228" cy="150" rx="16" ry="22" fill="#C9E6FA"/>`,
-    })
-  },
-  {
-    name:"Luna the Unicorn", title:"Moonlight Dreamer",
-    slots:{...SLOTS_CRITTER, crown:{pos:[[180,86]],s:.9}},
-    draw:()=>critter({
-      fur:"#FFF4F8", furDark:"#F0D7E4", belly:"#FFE6F1", paw:"#E7C9F0", nose:"#C98AA8",
-      muzzle:"#FFEAF3",
-      behind:`<path d="M236 338 Q300 340 306 276" stroke="url(#mane)" stroke-width="24" fill="none" stroke-linecap="round"/>`,
-      ears:`<path d="M118 90 Q106 50 136 62 Q146 80 146 102Z" fill="#FFF4F8"/>
-            <path d="M242 90 Q254 50 224 62 Q214 80 214 102Z" fill="#FFF4F8"/>`,
-      headExtra:`<path d="M180 72 L166 24 Q180 10 194 24Z" fill="url(#gold)" stroke="#A96D12" stroke-width="1.6"/>
-                 <path d="M172 50 l16 -6 M174 36 l12 -5" stroke="#A96D12" stroke-width="2.4" stroke-linecap="round"/>
-                 <path d="M126 112 Q104 70 142 58 Q132 96 154 84 Q148 116 180 96 Q212 116 206 84
-                   Q228 96 218 58 Q256 70 234 112 Q208 84 180 84 Q152 84 126 112Z" fill="url(#mane)"/>`,
-    })
-  },
-  {
-    name:"Mochi the Kitty", title:"Velvet Paw Diva",
-    slots:SLOTS_CRITTER,
-    draw:()=>critter({
-      fur:"#F7B45F", furDark:"#D9913C", belly:"#FFF0D6", paw:"#FFE7C2", nose:"#C96A5C",
-      muzzle:"#FFF4E2",
-      behind:`<path d="M242 326 Q306 318 288 254" stroke="#F7B45F" stroke-width="20" fill="none" stroke-linecap="round"/>`,
-      ears:`<path d="M116 94 L122 38 L166 74Z" fill="#F7B45F"/><path d="M126 86 L130 54 L154 76Z" fill="#FFC2D6"/>
-            <path d="M244 94 L238 38 L194 74Z" fill="#F7B45F"/><path d="M234 86 L230 54 L206 76Z" fill="#FFC2D6"/>`,
-      headExtra:`<path d="M138 102 q22 -10 42 -4 M222 102 q-22 -10 -42 -4" stroke="#D9913C" stroke-width="4" fill="none" stroke-linecap="round"/>`,
-      front:`<g stroke="#FFF4E2" stroke-width="2.6" stroke-linecap="round" opacity=".9">
-               <path d="M122 182 L82 174"/><path d="M122 192 L84 196"/>
-               <path d="M238 182 L278 174"/><path d="M238 192 L276 196"/></g>`,
-    })
-  },
-  {
-    name:"Ember the Dragon", title:"Keeper of the Hoard",
-    slots:SLOTS_CRITTER,
-    draw:()=>critter({
-      fur:"#5FD3A4", furDark:"#2FA67C", belly:"#FFE9A8", paw:"#FFD36B", nose:"#1F6B55",
-      muzzle:"#C9F5E2",
-      behind:`<path d="M240 332 Q314 334 318 262" stroke="#5FD3A4" stroke-width="20" fill="none" stroke-linecap="round"/>
-              <path d="M318 262 l16 -18 l4 24 l18 6 l-26 12Z" fill="#FFD36B"/>
-              <path d="M110 268 Q52 214 48 272 Q74 300 118 300Z" fill="#8FEFC6"/>
-              <path d="M250 268 Q308 214 312 272 Q286 300 242 300Z" fill="#8FEFC6"/>`,
-      ears:`<path d="M126 86 L112 40 L158 72Z" fill="#FFD36B"/><path d="M234 86 L248 40 L202 72Z" fill="#FFD36B"/>`,
-      headExtra:`<path d="M180 74 l-12 -26 l24 0Z" fill="#FFD36B"/>
-                 <path d="M156 236 q24 -14 48 0" stroke="#2FA67C" stroke-width="0" fill="none"/>`,
-      front:`<g fill="#FFD36B" opacity=".9">
-               <path d="M176 374 l4 -14 l4 14Z"/><path d="M176 356 l4 -14 l4 14Z"/></g>`,
-    })
-  },
-  {
-    name:"Pip the Bunny", title:"Garden Party Sweetheart",
-    slots:{...SLOTS_CRITTER, crown:{pos:[[180,76]],s:1}},
-    draw:()=>critter({
-      fur:"#E6DAF7", furDark:"#C7B4E8", belly:"#FBF4FF", paw:"#FFD9EC", nose:"#C96A8E",
-      muzzle:"#FBF4FF",
-      behind:`<circle cx="268" cy="330" r="22" fill="#FBF4FF"/>`,
-      ears:`<path d="M146 84 Q122 6 152 4 Q174 30 168 90Z" fill="#E6DAF7"/>
-            <path d="M149 76 Q136 20 152 20 Q162 42 160 82Z" fill="#FFD9EC"/>
-            <path d="M214 84 Q238 6 208 4 Q186 30 192 90Z" fill="#E6DAF7"/>
-            <path d="M211 76 Q224 20 208 20 Q198 42 200 82Z" fill="#FFD9EC"/>`,
-      front:`<g stroke="#C7B4E8" stroke-width="2.4" stroke-linecap="round" opacity=".85">
-               <path d="M124 180 L88 172"/><path d="M236 180 L272 172"/></g>
-             <path d="M172 196 q8 10 16 0" fill="#fff" opacity=".9"/>`,
-    })
-  },
+/* the shared body: head r78 at (180,150), wrists at 109/251,344 */
+function critter(o){
+  const inner = o.inner || o.belly;
+  return `
+    ${o.behind || ""}
+    ${tailOf(o.tail, o.fur, o.accent || o.belly)}
+    ${legsOf(o.legs, o.fur, o.dark, o.paw || o.belly)}
+    <ellipse cx="180" cy="300" rx="64" ry="74" fill="${o.fur}"/>
+    ${o.noBelly ? "" : MARK.belly(o.belly)}
+    ${o.bodyMark || ""}
+    <path d="M130 266 Q100 300 110 338" stroke="${o.dark}" stroke-width="31" fill="none" stroke-linecap="round"/>
+    <path d="M230 266 Q260 300 250 338" stroke="${o.dark}" stroke-width="31" fill="none" stroke-linecap="round"/>
+    <path d="M130 266 Q100 300 110 338" stroke="${o.fur}" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <path d="M230 266 Q260 300 250 338" stroke="${o.fur}" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <circle cx="109" cy="344" r="15" fill="${o.paw || o.belly}"/>
+    <circle cx="251" cy="344" r="15" fill="${o.paw || o.belly}"/>
+    ${earsOf(o.ears, o.fur, inner)}
+    ${o.headShape === "square"
+      ? `<rect x="104" y="80" width="152" height="140" rx="30" fill="${o.fur}"/>`
+      : `<circle cx="180" cy="150" r="78" fill="${o.fur}"/>`}
+    ${o.headMark || ""}
+    ${o.noFace ? "" : face(180, 150, 78, o)}
+    ${o.front || ""}`;
+}
+
+/* ---------- mermaids ---------- */
+function mermaid(o){
+  return `
+    <path d="M180 32 C104 32 78 92 86 146 C80 212 94 268 106 326 C128 272 110 240 118 206
+      C112 150 128 104 180 100 C232 104 248 150 242 206 C250 240 232 272 254 326
+      C266 268 280 212 274 146 C282 92 256 32 180 32Z" fill="${o.hair}"/>
+    <path d="M180 240 C212 248 222 290 214 332 C208 366 196 382 192 398
+      C214 384 258 392 276 426 C250 444 206 442 180 428 C154 442 110 444 84 426
+      C102 392 146 384 168 398 C164 382 152 366 146 332 C138 290 148 248 180 240Z" fill="${o.tailFill}"/>
+    <g opacity=".45" stroke="#BFFFF4" stroke-width="3" fill="none">
+      <path d="M160 280 q20 12 40 0"/><path d="M156 306 q24 13 48 0"/>
+      <path d="M158 332 q22 12 44 0"/><path d="M164 356 q16 10 32 0"/></g>
+    <ellipse cx="180" cy="214" rx="40" ry="48" fill="${o.skin}"/>
+    <path d="M140 206 q40 -26 80 0 q-6 26 -40 30 q-34 -4 -40 -30Z" fill="${o.top}"/>
+    ${shell(160,204,17,o.topShell)}${shell(200,204,17,o.topShell)}
+    <path d="M146 196 Q118 236 124 282" stroke="${o.skin}" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M214 196 Q242 236 236 282" stroke="${o.skin}" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <rect x="166" y="150" width="28" height="30" rx="12" fill="${o.skinDark}"/>
+    <circle cx="180" cy="112" r="58" fill="${o.skin}"/>
+    <path d="M122 110 C122 56 148 36 180 36 C212 36 238 56 238 110 C222 86 206 76 180 76 C154 76 138 86 122 110Z" fill="${o.hair}"/>
+    ${face(180,112,58,{muzzle:"rgba(255,255,255,0)", nose:"#D98A6E"})}`;
+}
+
+/* ---------- princesses, fairies and friends on two feet ---------- */
+function person(o){
+  return `
+    ${o.behind || ""}
+    <path d="M180 30 C112 30 88 86 96 142 C100 186 86 214 96 250 C112 214 110 182 118 158
+      C112 108 134 86 180 86 C226 86 248 108 242 158 C250 182 248 214 264 250
+      C274 214 260 186 264 142 C272 86 248 30 180 30Z" fill="${o.hair}"/>
+    <rect x="166" y="150" width="28" height="32" rx="12" fill="${o.skinDark}"/>
+    <path d="M180 176 Q216 178 230 214 L262 392 Q180 414 98 392 L130 214 Q144 178 180 176Z" fill="${o.gown}"/>
+    <path d="M180 176 Q212 180 224 212 Q180 232 136 212 Q148 180 180 176Z" fill="${o.bodice}"/>
+    <path d="M100 384 Q180 406 260 384 L262 392 Q180 414 98 392Z" fill="${o.trim}"/>
+    <path d="M142 192 Q112 238 118 292" stroke="${o.skin}" stroke-width="19" fill="none" stroke-linecap="round"/>
+    <path d="M218 192 Q248 238 242 292" stroke="${o.skin}" stroke-width="19" fill="none" stroke-linecap="round"/>
+    <ellipse cx="156" cy="404" rx="18" ry="9" fill="${o.shoe}"/><ellipse cx="204" cy="404" rx="18" ry="9" fill="${o.shoe}"/>
+    <circle cx="180" cy="112" r="58" fill="${o.skin}"/>
+    <path d="M122 112 C120 58 146 34 180 34 C214 34 240 58 238 112 C222 84 206 74 180 74 C154 74 138 84 122 112Z" fill="${o.hair}"/>
+    ${face(180,112,58,{muzzle:"rgba(255,255,255,0)", nose:o.noseC || "#D98A6E"})}
+    ${o.front || ""}`;
+}
+
+/* ---------- where the jewellery sits on each body ---------- */
+const SLOTS_CRITTER = {
+  dress:  {pos:[[180,286]], s:1},
+  crown:  {pos:[[180,74]],  s:1},
+  ears:   {pos:[[110,166],[250,166]], s:1},
+  neck:   {pos:[[180,232]], s:1},
+  brooch: {pos:[[180,296]], s:1},
+  wrist:  {pos:[[109,344],[251,344]], s:1},
+  low:    {pos:[[161,412],[199,412]], s:.78},
+};
+const SLOTS_MERMAID = {
+  dress:  {pos:[[180,222]], s:.7},
+  crown:  {pos:[[180,60]],  s:.92},
+  ears:   {pos:[[128,128],[232,128]], s:1},
+  neck:   {pos:[[180,188]], s:.95},
+  brooch: {pos:[[180,228]], s:.95},
+  wrist:  {pos:[[122,286],[238,286]], s:1},
+  low:    {pos:[[180,348]], s:1.25},
+};
+const SLOTS_PERSON = {
+  dress:  {pos:[[180,268]], s:1.02},
+  crown:  {pos:[[180,56]],  s:.92},
+  ears:   {pos:[[128,128],[232,128]], s:1},
+  neck:   {pos:[[180,186]], s:.95},
+  brooch: {pos:[[180,232]], s:.95},
+  wrist:  {pos:[[120,292],[240,292]], s:1},
+  low:    {pos:[[156,398],[204,398]], s:.78},
+};
+
+/* ---------- the roster ---------- */
+/* c: critter, m: mermaid, p: person. Every critter entry is just colours
+   plus which ears, tail and legs it wears. */
+const R_ = (n, t, k, o) => Object.assign({n, t, k}, o);
+const ROSTER = [
+  /* --- under the sea --- */
+  R_("Marina the Mermaid","Coral Reef Princess","m",{hair:"url(#hair)",tailFill:"url(#tail)",skin:"#FFD9BE",skinDark:"#F7C9A8",top:"#2FD39B",topShell:"#FFC2D6"}),
+  R_("Coral the Mermaid","Deep Lagoon Singer","m",{hair:"#7B5FE0",tailFill:"#FF7FA8",skin:"#F0C49B",skinDark:"#DFB28A",top:"#FFD36B",topShell:"#FFF1C2"}),
+  R_("Rosabel the Princess","Rose Garden Royal","p",{hair:"#F6C450",skin:"#FFD9BE",skinDark:"#F7C9A8",gown:"#FF7FA8",bodice:"#E8577F",trim:"#FFEBA8",shoe:"#FFEBA8"}),
+  R_("Indigo the Princess","Night Sky Royal","p",{hair:"#2E2A3F",skin:"#8E5A3C",skinDark:"#7A4C32",gown:"#5B6CD9",bodice:"#3A48A8",trim:"#FFEBA8",shoe:"#FFEBA8"}),
+  R_("Snowdrop the Snow Queen","Frost and Diamonds","p",{hair:"#EAF4FF",skin:"#F7E2D2",skinDark:"#E8CDBA",gown:"#9FD8F5",bodice:"#6FB8E0",trim:"#FFFFFF",shoe:"#CFE3EE"}),
+  R_("Thistle the Fairy","Dewdrop Wingbeat","p",{hair:"#FF9FC0",skin:"#FFD9BE",skinDark:"#F7C9A8",gown:"#B6F0A8",bodice:"#6FD38B",trim:"#FFF7EE",shoe:"#FFC2D6",
+    behind:`<path d="M140 212 Q56 150 54 232 Q84 276 146 258Z" fill="#CFF6FF" opacity=".8"/><path d="M220 212 Q304 150 306 232 Q276 276 214 258Z" fill="#CFF6FF" opacity=".8"/>`}),
+  R_("Saffron the Princess","Sunrise Court","p",{hair:"#6B3A1E",skin:"#C98A5C",skinDark:"#B2764C",gown:"#FFB04A",bodice:"#E0873A",trim:"#FFF1C2",shoe:"#FFEBA8"}),
+
+  /* --- pets and farmyard --- */
+  R_("Bluey the Pup","Backyard Adventurer","c",{fur:"#5FA9DF",dark:"#3D7FB4",belly:"#C9E6FA",paw:"#D7EDFB",nose:"#1B3A55",muzzle:"#E8F5FE",ears:"floppy",tail:"thin",legs:"stand",headMark:MARK.patch("#3D7FB4"),front:MARK.cheeks("#C9E6FA")}),
+  R_("Mochi the Kitty","Velvet Paw Diva","c",{fur:"#F7B45F",dark:"#D9913C",belly:"#FFF0D6",paw:"#FFE7C2",nose:"#C96A5C",muzzle:"#FFF4E2",ears:"pointy",tail:"thin",legs:"stand",front:MARK.whiskers("#FFF4E2")}),
+  R_("Pip the Bunny","Garden Party Sweetheart","c",{fur:"#E6DAF7",dark:"#C7B4E8",belly:"#FBF4FF",paw:"#FFD9EC",nose:"#C96A8E",muzzle:"#FBF4FF",inner:"#FFD9EC",ears:"long",tail:"puff",legs:"stand",accent:"#FBF4FF"}),
+  R_("Rosie the Pig","Mud Puddle Darling","c",{fur:"#FFA8C4",dark:"#E8829F",belly:"#FFD3E0",paw:"#FFC2D6",nose:"#D96A8E",muzzle:"#FFD3E0",ears:"tiny",tail:"curl",legs:"stand",front:`<ellipse cx="180" cy="176" rx="26" ry="19" fill="#FF8FB4"/><circle cx="172" cy="176" r="4" fill="#C9557A"/><circle cx="188" cy="176" r="4" fill="#C9557A"/>`}),
+  R_("Daisy the Cow","Meadow Belle","c",{fur:"#FFF7EE",dark:"#E0D6CC",belly:"#FFE9E2",paw:"#3A3330",nose:"#C98AA8",muzzle:"#FFD3E0",ears:"tiny",tail:"tufted",legs:"stand",accent:"#3A3330",bodyMark:MARK.spots("#3A3330"),headMark:`<circle cx="142" cy="112" r="19" fill="#3A3330"/>`}),
+  R_("Clover the Sheep","Fluffiest in the Field","c",{fur:"#FFF7EE",dark:"#DCCFC4",belly:"#FFF7EE",paw:"#4A4038",nose:"#9A8578",muzzle:"#F3E4DA",ears:"hang",tail:"puff",legs:"stand",accent:"#FFF7EE",noBelly:true,bodyMark:MARK.wool("#FFFDF7")}),
+  R_("Clip-Clop the Pony","Ribbon Trail Rider","c",{fur:"#D9A066",dark:"#B9814A",belly:"#FFE9CC",paw:"#7A5330",nose:"#6B4A33",muzzle:"#FFE9CC",ears:"tufts",tail:"bushy",legs:"stand",accent:"#4A3524",headMark:`<path d="M180 70 Q132 78 128 142 Q152 114 180 112 Q208 114 232 142 Q228 78 180 70Z" fill="#4A3524"/>`}),
+  R_("Nugget the Chick","Hatched Yesterday","c",{fur:"#FFD95F",dark:"#E8B93C",belly:"#FFF0B8",paw:"#FFA24A",nose:"#E8862C",muzzle:"#FFF0B8",ears:"",tail:"puff",legs:"stump",accent:"#FFE9A8",front:MARK.beak("#FFA24A")}),
+  R_("Quack the Duck","Pond Puddle Splasher","c",{fur:"#FFF7EE",dark:"#E2D8CE",belly:"#FFFDF7",paw:"#FFA24A",nose:"#E8862C",muzzle:"#FFFDF7",ears:"",tail:"puff",legs:"fins",accent:"#FFF7EE",front:MARK.bill("#FFB84A")}),
+  R_("Honey the Bear","Berry Patch Bruiser","c",{fur:"#C98A4A",dark:"#A96D32",belly:"#F3D6AE",paw:"#F3D6AE",nose:"#4A3524",muzzle:"#F3D6AE",ears:"round",tail:"puff",legs:"stand",inner:"#A96D32",accent:"#C98A4A"}),
+  R_("Bamboo the Panda","Snack-Time Philosopher","c",{fur:"#FFF7EE",dark:"#E0D6CC",belly:"#FFFDF7",paw:"#2E2A28",nose:"#2E2A28",muzzle:"#FFFDF7",ears:"round",tail:"puff",legs:"stand",inner:"#2E2A28",accent:"#FFF7EE",headMark:`<ellipse cx="146" cy="146" rx="24" ry="28" fill="#2E2A28" transform="rotate(-12 146 146)"/><ellipse cx="214" cy="146" rx="24" ry="28" fill="#2E2A28" transform="rotate(12 214 146)"/>`,
+    front:`<circle cx="120" cy="88" r="27" fill="#2E2A28"/><circle cx="240" cy="88" r="27" fill="#2E2A28"/>`}),
+  R_("Rusty the Fox","Autumn Leaf Trickster","c",{fur:"#F08A3C",dark:"#D06E24",belly:"#FFF0DC",paw:"#3A2A24",nose:"#3A2A24",muzzle:"#FFF0DC",ears:"pointy",tail:"bushy",legs:"stand",inner:"#3A2A24",accent:"#FFF7EE"}),
+  R_("Shadow the Wolf","Moonlit Howler","c",{fur:"#8E9BB0",dark:"#6E7B90",belly:"#DCE6F0",paw:"#4A5466",nose:"#2E3440",muzzle:"#DCE6F0",ears:"pointy",tail:"bushy",legs:"stand",inner:"#4A5466",accent:"#DCE6F0"}),
+  R_("Leo the Lion","Golden Mane Royalty","c",{fur:"#F3C165",dark:"#D9A03C",belly:"#FFEFC6",paw:"#E8B04A",nose:"#8A5A3C",muzzle:"#FFEFC6",ears:"round",tail:"tufted",legs:"stand",inner:"#D9A03C",accent:"#C98A3C",behind:MARK.mane("#D9833C")}),
+  R_("Stripe the Tiger","Jungle Pounce Champion","c",{fur:"#FFA24A",dark:"#E0822C",belly:"#FFF0DC",paw:"#FFD9B2",nose:"#C9553C",muzzle:"#FFF0DC",ears:"round",tail:"thin",legs:"stand",inner:"#FFD9B2",accent:"#2E2A28",bodyMark:MARK.stripes("#3A2A24"),front:MARK.whiskers("#FFF0DC")}),
+  R_("Peanut the Elephant","Gentle Trumpet","c",{fur:"#A8B4C4",dark:"#8A96A8",belly:"#D6DEE8",paw:"#C4CEDA",nose:"#7A8694",muzzle:"#D6DEE8",ears:"big",tail:"thin",legs:"stand",inner:"#C9A8BC",accent:"#D6DEE8",noFace:false,front:MARK.trunk("#A8B4C4")}),
+  R_("Gigi the Giraffe","Tallest at the Party","c",{fur:"#FFCF6B",dark:"#E0AC45",belly:"#FFEFC6",paw:"#C98A3C",nose:"#8A5A3C",muzzle:"#FFEFC6",ears:"tufts",tail:"tufted",legs:"stand",accent:"#A96D32",bodyMark:MARK.spots("#C98A3C"),headMark:`<circle cx="156" cy="62" r="8" fill="#A96D32"/><circle cx="204" cy="62" r="8" fill="#A96D32"/>`}),
+  R_("Willow the Deer","Forest Clearing Dancer","c",{fur:"#D9A066",dark:"#BC8449",belly:"#FFEFD9",paw:"#8A5A3C",nose:"#5A3C28",muzzle:"#FFEFD9",ears:"tufts",tail:"puff",legs:"stand",accent:"#FFF7EE",bodyMark:MARK.spots("#FFF0DC"),
+    headMark:`<path d="M148 66 Q132 22 150 28 Q148 44 158 70Z" fill="#8A5A3C"/><path d="M212 66 Q228 22 210 28 Q212 44 202 70Z" fill="#8A5A3C"/>`}),
+  R_("Bramble the Hedgehog","Prickly but Polite","c",{fur:"#C9A078",dark:"#A9825A",belly:"#FFE9CC",paw:"#FFD9B2",nose:"#3A2A24",muzzle:"#FFE9CC",ears:"round",tail:"puff",legs:"stand",inner:"#FFD9B2",accent:"#8A6A4A",
+    behind:`<path d="M180 212 Q86 228 102 328 Q118 390 180 392 Q242 390 258 328 Q274 228 180 212Z" fill="#7A5C3C"/>
+      <g fill="#5A4228"><path d="M110 268 l-22 -16 l24 -6Z"/><path d="M104 318 l-24 -8 l20 -16Z"/><path d="M250 268 l22 -16 l-24 -6Z"/><path d="M256 318 l24 -8 l-20 -16Z"/></g>`}),
+  R_("Nutmeg the Squirrel","Acorn Treasurer","c",{fur:"#D98A4A",dark:"#B96C2C",belly:"#FFE9CC",paw:"#FFD9B2",nose:"#5A3C28",muzzle:"#FFE9CC",ears:"tuft",tail:"bushy",legs:"stand",accent:"#F3C49A"}),
+  R_("Pepper the Raccoon","Midnight Snack Bandit","c",{fur:"#9AA6B4",dark:"#7A8696",belly:"#DCE4EC",paw:"#5A6472",nose:"#2E3440",muzzle:"#DCE4EC",ears:"round",tail:"bushy",legs:"stand",inner:"#5A6472",accent:"#5A6472",headMark:MARK.mask("#3A4452")}),
+  R_("Gum the Koala","Eucalyptus Dreamer","c",{fur:"#AEB8C2",dark:"#8E98A4",belly:"#E2E9F0",paw:"#C6D0DA",nose:"#3A3F48",muzzle:"#E2E9F0",ears:"big",tail:"puff",legs:"stand",inner:"#D6C2CE",accent:"#E2E9F0",
+    front:`<ellipse cx="180" cy="172" rx="22" ry="17" fill="#3A3F48"/>`}),
+  R_("Mango the Monkey","Vine Swing Showoff","c",{fur:"#B57A4A",dark:"#95602E",belly:"#FFD9A8",paw:"#FFD9A8",nose:"#6B4228",muzzle:"#FFD9A8",ears:"round",tail:"thin",legs:"stand",inner:"#FFC2A8",accent:"#B57A4A",
+    headMark:`<ellipse cx="180" cy="166" rx="48" ry="40" fill="#FFD9A8"/>`}),
+  R_("Hoppy the Frog","Lily Pad Leaper","c",{fur:"#7FD36B",dark:"#5CB049",belly:"#DCF5C2",paw:"#A8E88A",nose:"#3C7A2C",muzzle:"#DCF5C2",ears:"",tail:"",legs:"stand",accent:"#A8E88A",
+    headMark:`<circle cx="138" cy="92" r="26" fill="#7FD36B"/><circle cx="222" cy="92" r="26" fill="#7FD36B"/>
+      <circle cx="138" cy="90" r="13" fill="#fff"/><circle cx="222" cy="90" r="13" fill="#fff"/>
+      <circle cx="138" cy="90" r="7" fill="#13263B"/><circle cx="222" cy="90" r="7" fill="#13263B"/>`}),
+
+  /* --- scales and spikes --- */
+  R_("Snappy the Alligator","Swamp Smile Specialist","c",{fur:"#6FBF7A",dark:"#4E9C5A",belly:"#D6F0C2",paw:"#A8DC9A",nose:"#2E6B3C",muzzle:"#D6F0C2",ears:"",tail:"long",legs:"stand",accent:"#6FBF7A",
+    front:MARK.snout("#6FBF7A"),bodyMark:`<g fill="#4E9C5A"><path d="M160 238 l-8 -18 l20 4Z"/><path d="M200 238 l8 -18 l-20 4Z"/></g>`}),
+  R_("Tilly the Turtle","Slow and Very Shiny","c",{fur:"#8FD6A8",dark:"#6AB888",belly:"#D9F2E2",paw:"#B2E8C4",nose:"#3C7A5C",muzzle:"#D9F2E2",ears:"",tail:"puff",legs:"stand",accent:"#8FD6A8",noBelly:true,bodyMark:MARK.shell("#C9933C","#8A6224")}),
+  R_("Rex the T-Rex","Tiny Arms, Big Heart","c",{fur:"#8ED36B",dark:"#6BB249",belly:"#F0F5C2",paw:"#C2E8A8",nose:"#3C6B2C",muzzle:"#F0F5C2",ears:"",tail:"long",legs:"stand",accent:"#8ED36B",
+    front:MARK.jaws("#8ED36B","#6BB249"),
+    headMark:`<g fill="#FFD36B"><path d="M180 70 l-16 -28 l32 0Z"/><path d="M134 100 l-12 -24 l24 4Z"/><path d="M226 100 l12 -24 l-24 4Z"/></g>`,
+    bodyMark:`<g fill="#6BB249" opacity=".9"><path d="M126 268 q54 10 108 0 v10 q-54 10 -108 0Z"/><path d="M130 312 q50 10 100 0 v10 q-50 10 -100 0Z"/></g>`}),
+  R_("Thistle the Stegosaurus","Plated and Proud","c",{fur:"#A8B4F0",dark:"#8894DC",belly:"#E2E8FF",paw:"#C4CEFF",nose:"#4A528A",muzzle:"#E2E8FF",ears:"",tail:"long",legs:"stand",accent:"#A8B4F0",
+    behind:MARK.plates("#FFD36B")}),
+  R_("Trixie the Triceratops","Three Horns, One Tiara","c",{fur:"#F0A8C4",dark:"#DC88A8",belly:"#FFE2EE",paw:"#FFC4DC",nose:"#8A4A62",muzzle:"#FFE2EE",ears:"",tail:"long",legs:"stand",accent:"#F0A8C4",
+    behind:MARK.frill("#DC88A8"),headMark:`<path d="M180 76 l-12 -28 l24 0Z" fill="#FFF0DC"/><path d="M138 110 l-14 -30 l26 6Z" fill="#FFF0DC"/><path d="M222 110 l14 -30 l-26 6Z" fill="#FFF0DC"/>`}),
+  R_("Ember the Dragon","Keeper of the Hoard","c",{fur:"#5FD3A4",dark:"#2FA67C",belly:"#FFE9A8",paw:"#FFD36B",nose:"#1F6B55",muzzle:"#C9F5E2",ears:"tufts",tail:"long",legs:"stand",accent:"#8FEFC6",
+    behind:MARK.wings("#8FEFC6"),headMark:`<path d="M180 74 l-12 -26 l24 0Z" fill="#FFD36B"/>`}),
+  R_("Luna the Unicorn","Moonlight Dreamer","c",{fur:"#FFF4F8",dark:"#F0D7E4",belly:"#FFE6F1",paw:"#E7C9F0",nose:"#C98AA8",muzzle:"#FFEAF3",ears:"tufts",tail:"bushy",legs:"stand",accent:"url(#mane)",
+    headMark:MARK.horn()+`<path d="M126 112 Q104 70 142 58 Q132 96 154 84 Q148 116 180 96 Q212 116 206 84 Q228 96 218 58 Q256 70 234 112 Q208 84 180 84 Q152 84 126 112Z" fill="url(#mane)"/>`}),
+
+  /* --- wings and wiggles --- */
+  R_("Waddle the Penguin","Tuxedo Already Sorted","c",{fur:"#3A4452",dark:"#2A3340",belly:"#FFFDF7",paw:"#FFB84A",nose:"#FFB84A",muzzle:"#FFFDF7",ears:"",tail:"puff",legs:"fins",accent:"#3A4452",
+    headMark:`<ellipse cx="180" cy="168" rx="48" ry="42" fill="#FFFDF7"/>`,front:MARK.beak("#FFB84A")}),
+  R_("Hoot the Owl","Night Shift Librarian","c",{fur:"#B58A5C",dark:"#956C3C",belly:"#F3DCBC",paw:"#FFB84A",nose:"#E8862C",muzzle:"#F3DCBC",ears:"tufts",tail:"puff",legs:"stump",accent:"#B58A5C",
+    headMark:`<circle cx="152" cy="146" r="30" fill="#F3DCBC"/><circle cx="208" cy="146" r="30" fill="#F3DCBC"/>`,front:MARK.beak("#FFB84A")}),
+  R_("Pinky the Flamingo","One-Leg Balance Queen","c",{fur:"#FF9FC0",dark:"#E87FA4",belly:"#FFD9E8",paw:"#FFC2D6",nose:"#2E2A28",muzzle:"#FFD9E8",ears:"",tail:"puff",legs:"stump",accent:"#FF9FC0",front:MARK.bill("#FF6B9A")}),
+  R_("Polly the Parrot","Loudest Dresser Here","c",{fur:"#5CC96B",dark:"#3CA84C",belly:"#FFE36B",paw:"#FFB84A",nose:"#E8862C",muzzle:"#FFE36B",ears:"",tail:"fish",legs:"stump",accent:"#FF7FA8",
+    headMark:`<path d="M180 70 Q150 44 162 24 Q182 44 180 70Z" fill="#FF7FA8"/>`,front:MARK.beak("#FFB84A")}),
+  R_("Buzz the Bee","Busiest in the Garden","c",{fur:"#FFD95F",dark:"#E0B33C",belly:"#FFF0B8",paw:"#3A3330",nose:"#3A3330",muzzle:"#FFF0B8",ears:"",tail:"puff",legs:"stand",accent:"#FFD95F",
+    behind:MARK.wings("#DCF4FF"),bodyMark:`<g fill="#3A3330"><path d="M126 272 q54 16 108 0 v16 q-54 16 -108 0Z"/><path d="M130 320 q50 16 100 0 v16 q-50 16 -100 0Z"/></g>`,
+    headMark:MARK.antennae("#3A3330")}),
+  R_("Flutter the Butterfly","Wings Like Stained Glass","c",{fur:"#C98AF0",dark:"#A86ADC",belly:"#EEDCFF",paw:"#DCC2F5",nose:"#5A3C7A",muzzle:"#EEDCFF",ears:"",tail:"puff",legs:"stand",accent:"#C98AF0",
+    behind:MARK.flutter("#FF9FC0","#FFEBA8"),headMark:MARK.antennae("#5A3C7A")}),
+
+  /* --- deep water --- */
+  R_("Bubbles the Fish","Reef Parade Leader","c",{fur:"#FFA24A",dark:"#E0822C",belly:"#FFE9C2",paw:"#FFD36B",nose:"#C9553C",muzzle:"#FFF0DC",ears:"",tail:"fish",legs:"fins",accent:"#FFD36B",
+    bodyMark:`<g fill="#FFF7EE" opacity=".8"><path d="M126 272 q54 10 108 0 v12 q-54 10 -108 0Z"/></g>`}),
+  R_("Inky the Octopus","Eight Arms, Eight Bangles","c",{fur:"#C96AC4",dark:"#A84AA4",belly:"#F5D6F2",paw:"#EEB8E8",nose:"#7A2E72",muzzle:"#F5D6F2",ears:"",tail:"",legs:"tentacles",accent:"#C96AC4"}),
+  R_("Splash the Dolphin","Wave Jump Record Holder","c",{fur:"#7FC4E8",dark:"#5AA4CC",belly:"#E2F4FF",paw:"#B2DEF2",nose:"#3C6B8A",muzzle:"#E2F4FF",ears:"",tail:"fish",legs:"fins",accent:"#9FD8F5",
+    headMark:`<path d="M180 70 l-10 -24 l26 8Z" fill="#5AA4CC"/>`}),
+
+  /* --- made, not hatched --- */
+  R_("Bolt the Robot","Runs on Compliments","c",{fur:"#AEC4D6",dark:"#8EA4B6",belly:"#DCE8F2",paw:"#C4D6E4",nose:"#3A4452",muzzle:"#DCE8F2",ears:"",tail:"",legs:"stand",accent:"#AEC4D6",headShape:"square",
+    headMark:MARK.bolts("#FFD36B")}),
+  R_("Zip the Alien","Came for the Jewellery","c",{fur:"#9FE88A",dark:"#7AC866",belly:"#DCF5C2",paw:"#C2EDA8",nose:"#3C7A2C",muzzle:"#DCF5C2",ears:"",tail:"",legs:"stand",accent:"#9FE88A",
+    headMark:MARK.antennae("#7AC866")+`<ellipse cx="180" cy="150" rx="78" ry="82" fill="#9FE88A"/>`}),
+  R_("Bongo the Banana Buddy","Goggles On, Mischief Ready","c",{fur:"#FFD95F",dark:"#E0B33C",belly:"#FFE9A8",paw:"#3A3330",nose:"#3A3330",muzzle:"rgba(255,255,255,0)",ears:"",tail:"",legs:"stand",accent:"#FFD95F",
+    noBelly:true,noFace:true,bodyMark:`<path d="M126 300 q54 -14 108 0 v40 q-54 -14 -108 0Z" fill="#5A7ACC"/>
+      <path d="M126 300 q54 -14 108 0" stroke="#3A5AAC" stroke-width="4" fill="none"/>`,
+    headMark:MARK.goggles()+`<path d="M158 196 q22 16 44 0" stroke="#3A3330" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M176 58 q6 -22 16 -26" stroke="#3A3330" stroke-width="4" fill="none" stroke-linecap="round"/>`}),
 ];
+
+const CHARACTERS = ROSTER.map(r => ({
+  name: r.n,
+  title: r.t,
+  slots: r.k === "m" ? SLOTS_MERMAID : r.k === "p" ? SLOTS_PERSON : SLOTS_CRITTER,
+  draw: () => r.k === "m" ? mermaid(r) : r.k === "p" ? person(r) : critter(r),
+}));
 
 /* ============================ game state ============================ */
 const byId = {};
@@ -709,7 +946,7 @@ const doll = document.getElementById("doll");
 const tray = document.getElementById("tray");
 const pipsEl = document.getElementById("pips");
 const verdictEl = document.getElementById("verdict");
-const dotsEl = document.getElementById("dots");
+const countEl = document.getElementById("count");
 
 /* ---- build the tray once ---- */
 SHELVES.forEach(sh => {
@@ -727,7 +964,8 @@ SHELVES.forEach(sh => {
     b.id = "jewel-" + item.id;
     b.dataset.item = item.id;
     b.setAttribute("aria-pressed", "false");
-    const box = sh.slot === "crown" ? "-56 -52 112 60"
+    const box = sh.slot === "dress" ? "-100 -70 200 206"
+      : sh.slot === "crown" ? "-56 -52 112 60"
       : sh.slot === "ears" ? "-26 -8 52 46"
       : sh.slot === "neck" ? "-52 -6 104 72"
       : "-30 -24 60 48";
@@ -741,7 +979,6 @@ SHELVES.forEach(sh => {
 
 /* ---- shine meter pips ---- */
 SLOT_ORDER.forEach(() => pipsEl.appendChild(document.createElement("span")));
-CHARACTERS.forEach(() => dotsEl.appendChild(document.createElement("i")));
 
 /* ---- render ---- */
 function render(){
@@ -762,13 +999,16 @@ function render(){
 
   document.getElementById("who").textContent = ch.name;
   document.getElementById("what").textContent = ch.title;
-  [...dotsEl.children].forEach((d, i) => d.classList.toggle("on", i === charIndex));
+  countEl.textContent = `${charIndex + 1} of ${CHARACTERS.length}`;
 
+  const total = SLOT_ORDER.length;
   const n = SLOT_ORDER.filter(s => worn[s]).length;
   [...pipsEl.children].forEach((p, i) => p.classList.toggle("lit", i < n));
-  const words = ["Bare as a pebble","A little glimmer","Getting pretty","Properly shiny","Dazzling!","Ocean royalty","DAZZLING QUEEN!"];
-  verdictEl.textContent = n === 6 ? words[6] : `${n} of 6 · ${words[n]}`;
-  verdictEl.classList.toggle("max", n === 6);
+  const words = ["Bare as a pebble","A little glimmer","Getting pretty","Properly shiny",
+                 "Dazzling!","Ocean royalty","Almost perfect","DAZZLING QUEEN!"];
+  verdictEl.textContent = n === total ? words[total] : `${n} of ${total} · ${words[n]}`;
+  verdictEl.classList.toggle("max", n === total);
+  [...pickerGrid.children].forEach((b, i) => b.setAttribute("aria-current", String(i === charIndex)));
 
   document.querySelectorAll(".jewel").forEach(b => {
     b.setAttribute("aria-pressed", String(worn[byId[b.dataset.item].slot] === b.dataset.item));
@@ -787,7 +1027,7 @@ function toggle(item){
     const spec = CHARACTERS[charIndex].slots[item.slot];
     spec.pos.forEach(p => burst(p[0], p[1], 14));
   }
-  if(SLOT_ORDER.filter(s => worn[s]).length === 6 && !already){ shower(); sfx("fanfare"); }
+  if(SLOT_ORDER.filter(s => worn[s]).length === SLOT_ORDER.length && !already){ shower(); sfx("fanfare"); }
 }
 function switchChar(dir){
   charIndex = (charIndex + dir + CHARACTERS.length) % CHARACTERS.length;
@@ -796,6 +1036,25 @@ function switchChar(dir){
   burst(180, 200, 26);
   sfx("swap");
 }
+const picker = document.getElementById("picker"), pickerGrid = document.getElementById("pickerGrid");
+CHARACTERS.forEach((ch, i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = ch.name;
+  b.addEventListener("click", () => {
+    charIndex = i; worn = closets[i]; render();
+    picker.hidden = true; burst(180, 200, 22); sfx("swap");
+  });
+  pickerGrid.appendChild(b);
+});
+document.getElementById("friends").addEventListener("click", () => {
+  picker.hidden = false;
+  const current = pickerGrid.children[charIndex];
+  if(current) current.scrollIntoView({block:"center"});
+});
+document.getElementById("pickerClose").addEventListener("click", () => { picker.hidden = true; });
+document.addEventListener("keydown", e => { if(e.key === "Escape") picker.hidden = true; });
+
 document.getElementById("prev").addEventListener("click", () => switchChar(-1));
 document.getElementById("next").addEventListener("click", () => switchChar(1));
 document.getElementById("clear").addEventListener("click", () => {
@@ -815,6 +1074,7 @@ document.getElementById("surprise").addEventListener("click", () => {
   sfx("fanfare");
 });
 document.addEventListener("keydown", e => {
+  if(!picker.hidden) return;
   if(e.key === "ArrowLeft") switchChar(-1);
   if(e.key === "ArrowRight") switchChar(1);
 });
@@ -1017,7 +1277,7 @@ function start(state){
     worn = closets[charIndex];
   } else {
     /* open in a pretty resting state, not an empty one */
-    worn = closets[0] = {crown:"tiara", ears:"peardrop", neck:"pearlstrand", low:"goldbands"};
+    worn = closets[0] = {dress:"seasilk", crown:"tiara", ears:"peardrop", neck:"pearlstrand", low:"goldbands"};
   }
   render();
 }
